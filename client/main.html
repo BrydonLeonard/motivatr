@@ -1,0 +1,50 @@
+<head>
+    <title>simple</title>
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <h1>motivatr</h1>
+        {{something}}
+        {{>todoContainer}}
+    </div>
+</body>
+
+<template name="todoContainer">
+    <nav class="{{#if done}}teal accent-4{{else}}teal lighten-2{{/if}}">
+        <div class="nav-wrapper {{#if done}}teal accent-4{{else}}teal lighten-2{{/if}}">
+            <div class="col s12">
+                {{#each breadcrumbs}}
+                    <a href="#!" class="breadcrumb">{{.}}</a>
+                {{/each}}
+            </div>
+        </div>
+    </nav>
+    <div class="progress">
+        <div class="determinate {{#if done}}teal accent-4{{/if}}" style="width: {{donePercentage}}"></div>
+    </div>
+    <button id="add" class="waves-effect waves-light btn">Add</button>
+    {{#unless root}}
+        <button id="back" class="waves-effect waves-light btn">Back</button>
+    {{/unless}}
+    {{#if noChildren}}
+        <button id="done" class="waves-effect waves-light btn">toggle</button>
+        <button id="remove" class="waves-effect waves-red btn red lighten-2">remove</button>
+        <blockquote>
+            This task has no subtasks. Click toggle to mark it as {{#if done}}unfinished{{else}}finished{{/if}}.
+            Click remove to delete this task.
+        </blockquote>
+    {{else}}
+        <div class="collection">
+            {{#each item}}
+                {{>itemTemp}}
+            {{/each}}
+        </div>
+    {{/if}}
+    <br>
+</template>
+
+<template name="itemTemp">
+    <a href="#" class="itemLink collection-item">{{name}} : {{percentage}}<span class="badge">{{{numNotDone}}}</span></a>
+</template>
