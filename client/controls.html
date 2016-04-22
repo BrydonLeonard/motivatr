@@ -1,0 +1,22 @@
+<template name="defaultLayout">
+    {{>topnav}}
+    {{>sidenav}}
+    {{>yield}}
+</template>
+
+<template name="sidenav">
+    <ul id="slide-out" class="side-nav fixed">
+        <li><a href="#" class="goto" name="tree">Tree view</a></li>
+        <li><a href="#" class="goto" name="menu">Menu view</a></li>
+        <li><a href="#" class="goto" name="desktop">Desktop controls</a></li>
+    </ul>
+</template>
+
+<template name="topnav">
+    <nav class="teal lighten-2">
+        <div class="nav-wrapper">
+            <a href="#!" data-activates="slide-out" class="button-collapse"><i class="material-icons">menu</i></a>
+            <a href="#" class="goto brand-logo" name="home">motivatr</a>
+        </div>
+    </nav>
+</template>

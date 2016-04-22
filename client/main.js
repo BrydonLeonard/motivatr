@@ -6,13 +6,13 @@ itemCollection = new Mongo.Collection('items');
 
 let itemDep = new Tracker.Dependency;
 
-let breadcrumbs = ['root'];
+let breadcrumbs = [{name:'root', key:'root', num:0}];
 
 import './main.html';
 
 var activeItem;
 
-Template.body.onCreated(function(){
+Template.todoContainer.onCreated(function(){
     itemDep.changed();
 });
 
@@ -66,6 +66,7 @@ Template.todoContainer.helpers({
 
 Template.todoContainer.events({
     'click #add':function(event){
+        event.preventDefault();
         let name = prompt('event name');
         if (name){
             if (!activeItem){
@@ -78,46 +79,75 @@ Template.todoContainer.events({
                 });
             } else {
                 let parent = itemCollection.findOne(activeItem);
-                _id = (new Meteor.Collection.ObjectID())._str;
-                itemCollection.insert({
-                    _id,
-                    level:parent.level+1,
-                    children:[],
-                    name,
-                    done:false,
-                    parent:parent._id
-                });
-                itemCollection.update({_id:parent._id}, {$push:{children:_id}});
+                if (parent) {
+                    _id = (new Meteor.Collection.ObjectID())._str;
+                    itemCollection.insert({
+                        _id,
+                        level: parent.level + 1,
+                        children: [],
+                        name,
+                        done: false,
+                        parent: parent._id
+                    });
+                    itemCollection.update({_id: parent._id}, {$push: {children: _id}});
+                } else {
+                    _id = (new Meteor.Collection.ObjectID())._str;
+                    itemCollection.insert({
+                        _id,
+                        level: 0,
+                        children: [],
+                        name,
+                        done: false,
+                        parent: null
+                    });
+                    itemCollection.update({_id: parent._id}, {$push: {children: _id}});
+                }
             }
         }
     },
     'click #back':function(event){
-        let current= itemCollection.findOne(activeItem);
-        if (current){
-            activeItem = current.parent;
-            breadcrumbs.splice(breadcrumbs.length-1);
-            itemDep.changed();
-        }
+        event.preventDefault();
+        goBack();
     },
     'click #done':function(event){
+        event.preventDefault();
         let current = itemCollection.findOne(activeItem);
         if (current){
             itemCollection.update({_id:activeItem}, {$set:{done:!current.done}});
         }
     },
     'click #remove':function(event){
+        event.preventDefault();
         if (confirm('are you sure?')){
             let current = itemCollection.findOne(activeItem);
             if (current) {
                 activeItem = current.parent;
                 breadcrumbs.splice(breadcrumbs.length - 1);
                 itemCollection.remove(current._id);
-                itemCollection.update(current.parent._id, {$pull: {children: current._id}});
+                itemCollection.update(current.parent, {$pull: {children: current._id}});
+                console.log(current.parent);
                 itemDep.changed();
             }
+            $('.fixed-action-btn').closeFAB();
+        }
+    },
+    'click .breadcrumb':function(event){
+        var iter = $('.breadcrumb').length - ($(event.target).index() + 1);
+        for (var i = 0; i < iter; i++){
+            goBack();
         }
     }
 });
+
+let goBack = function(){
+    let current= itemCollection.findOne(activeItem);
+    if (current){
+        activeItem = current.parent;
+        breadcrumbs.splice(breadcrumbs.length-1);
+        $('.fixed-action-btn').closeFAB();
+        itemDep.changed();
+    }
+}
 
 Template.itemTemp.helpers({
     'name':function(){
@@ -143,9 +173,11 @@ Template.itemTemp.helpers({
 Template.itemTemp.events({
     'click .itemLink':function(event){
         event.preventDefault();
-        breadcrumbs.push(this.name);
+        console.log(this);
+        breadcrumbs.push({name:this.name, 'key':this._id});
         activeItem = this._id;
         itemDep.changed();
+        $('.fixed-action-btn').closeFAB();
     }
 });
 
@@ -169,7 +201,7 @@ let countNotDone = function(item){
     }
 };
 
-let completePerc = function(item){
+completePerc = function(item){
     let thisItem = itemCollection.findOne({_id:item});
     if (thisItem) {
         let thisChildren = thisItem.children;

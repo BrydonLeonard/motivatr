@@ -1,22 +1,15 @@
 <head>
     <title>simple</title>
     <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
-<body>
-    <div class="container">
-        <h1>motivatr</h1>
-        {{something}}
-        {{>todoContainer}}
-    </div>
-</body>
-
 <template name="todoContainer">
-    <nav class="{{#if done}}teal accent-4{{else}}teal lighten-2{{/if}}">
-        <div class="nav-wrapper {{#if done}}teal accent-4{{else}}teal lighten-2{{/if}}">
+    <nav class="teal lighten-3 breadcrumb-holder">
+        <div class="nav-wrapper teal lighten-3">
             <div class="col s12">
                 {{#each breadcrumbs}}
-                    <a href="#!" class="breadcrumb">{{.}}</a>
+                    <a href="#!" class="breadcrumb">{{name}}</a>
                 {{/each}}
             </div>
         </div>
@@ -24,27 +17,45 @@
     <div class="progress">
         <div class="determinate {{#if done}}teal accent-4{{/if}}" style="width: {{donePercentage}}"></div>
     </div>
-    <button id="add" class="waves-effect waves-light btn">Add</button>
-    {{#unless root}}
-        <button id="back" class="waves-effect waves-light btn">Back</button>
-    {{/unless}}
-    {{#if noChildren}}
-        <button id="done" class="waves-effect waves-light btn">toggle</button>
-        <button id="remove" class="waves-effect waves-red btn red lighten-2">remove</button>
-        <blockquote>
-            This task has no subtasks. Click toggle to mark it as {{#if done}}unfinished{{else}}finished{{/if}}.
-            Click remove to delete this task.
-        </blockquote>
-    {{else}}
-        <div class="collection">
-            {{#each item}}
-                {{>itemTemp}}
-            {{/each}}
+    <div class="container">
+        <div class="fixed-action-btn vertical" style="bottom: 45px; right:25px">
+            <a class="btn-floating btn-large teal accent-4">
+                <i class="material-icons">more_horiz</i>
+            </a>
+            <ul>
+                <li><a class="btn-floating teal accent-4" id="add"><i class="material-icons">add</i></a></li>
+                {{#if noChildren}}
+                    <li><a class="btn-floating {{#if done}}red lighten-2{{else}}teal accent-4{{/if}}" id="done"><i class="material-icons">{{#if done}}close{{else}}check{{/if}}</i></a></li>
+                    <li><a class="btn-floating red lighten-2" id="remove"><i class="material-icons">delete</i></a></li>
+                {{/if}}
+            </ul>
         </div>
-    {{/if}}
-    <br>
+        {{#unless root}}
+            <div class="fixed-action-btn" style="bottom: 45px; right: 100px">
+                <a class="btn-floating btn-large red lighten-2" id="back">
+                    <i class="material-icons">chevron_left</i>
+                </a>
+            </div>
+        {{/unless}}
+        {{#if noChildren}}
+            <blockquote>
+                This task has no subtasks. Click toggle to mark it as {{#if done}}unfinished{{else}}finished{{/if}}.
+                Click remove to delete this task.
+            </blockquote>
+        {{else}}
+            <div class="collection">
+                {{#each item}}
+                    {{>itemTemp}}
+                {{/each}}
+            </div>
+        {{/if}}
+        <br>
+    </div>
 </template>
 
 <template name="itemTemp">
-    <a href="#" class="itemLink collection-item">{{name}} : {{percentage}}<span class="badge">{{{numNotDone}}}</span></a>
+    <a href="#" class="itemLink collection-item">{{name}}<span class="badge">{{{numNotDone}}}</span></a>
+</template>
+
+<template name="optionsFab">
 </template>
