@@ -1,0 +1,82 @@
+/* Padding for the breadcrumb bar */
+.nav-wrapper{
+    padding-left:10px;
+}
+
+/* Makes FAB go darker when side-nav expands*/
+.fixed-action-btn{
+     z-index:997;
+ }
+
+/* Makes the breadcrumb bar take slightly less space */
+.breadcrumb-holder{
+    height:43px;
+    line-height:45px;
+}
+
+/* Progress bar hugs the object above it */
+.determinate,
+.progress{
+    margin:0;
+}
+
+/* For the sidenav */
+header, main, footer, body {
+    padding-left: 240px;
+}
+
+/* Also for the sidenav */
+@media only screen and (max-width : 992px) {
+    header, main, footer, body {
+        padding-left: 0;
+    }
+}
+
+/* The home screen heading */
+.home-heading{
+    text-align:center;
+}
+
+/* buttons that fill their container */
+.spread-button{
+    width:100%;
+}
+
+/* The small sign up text in the main menu */
+.signup-text{
+    text-align: center;
+}
+
+/* The logo on the login and signup screens */
+.main-logo{
+    position: absolute;
+    max-height: 250px;
+    z-index:-1;
+    opacity:0.5;
+    left:50%;
+}
+
+/* Facebook blue color */
+.facebook-blue{
+    background-color:#3b5998;
+}
+
+
+
+
+/* Working on these */
+
+.default-leaf { color:black; background-color:#DCDCDC; }
+
+.selected-leaf { color:white; background-color:#191970; }
+#chart_div {
+    overflow-y:hidden;
+    width: 100%;
+    height: 90%;
+    display: block;
+}
+
+.container{
+    height:100%;
+}
+

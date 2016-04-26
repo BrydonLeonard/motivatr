@@ -1,3 +1,9 @@
+import { Router } from 'meteor/iron:router';
+import 'meteor/materialize:materialize';
+import './controls.html';
+
+console.log('controls.js');
+
 Template.sidenav.onRendered(function(){
     $('.button-collapse').sideNav({
     });
@@ -17,4 +23,8 @@ Template.sidenav.events({
         event.preventDefault();
         Router.go('/desktop');
     }
+});
+
+Template.blankLayout.onRendered(function(){
+    $('body').css({'padding-left':0});
 });
