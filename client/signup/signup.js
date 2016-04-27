@@ -1,2 +1,0 @@
-import './signup.html';
-

@@ -5,7 +5,7 @@ import { completeClass, getVisChildren } from './imports/visTreeHelpers';
 import { completeLabel, getDesktopChildren } from './imports/desktopTreeHelpers';
 import * as Errors from './imports/errors';
 import * as Check from './imports/check';
-import { bubbleComplete, bubbleRemove } from './imports/treeHelpers';
+import { bubbleComplete, bubbleRemove, bubbleAdd, addLeaf, removeLeaf } from './imports/treeHelpers';
 
 Meteor.startup(() => {
   // code to run on server at startup
@@ -23,7 +23,7 @@ Meteor.methods({
      *   }
      *   classes
      */
-    visTreeData: function(callback){
+    visTreeData: function(){
         if (Meteor.userId) {
             let data = [];
 
@@ -63,7 +63,7 @@ Meteor.methods({
             //Add the edges to the array to be sent back to the client
             data = data.concat(edges);
 
-            callback(data);
+            return data
         } else {
             Errors.noLoginError();
         }
@@ -99,44 +99,19 @@ Meteor.methods({
     /**
      * Adds a child node to the given parent
      * @param parentId The parent ID
-     * @param childName The child node's name
+     * @param name The child node's name
      */
-    addChild: function(parentId, childName){
+    addChild: function(parentId, name){
         if (Meteor.userId){
-            check(parentId, String);
-            check(childName, String);
+            check(parentId, Match.OneOf(String, null));
+            check(name, String);
 
-            //Allows this method to create root nodes as well
-            //Checks permissions while acquiring the node
-            let parent = parentId ? Check.nodePermissions(parentId) : null;
+            if (parentId != null) {
+                Check.nodePermissions(parentId);
+            }
 
-            let _id = (new Meteor.Collection.ObjectID())._str;
-            let level = parent ? parent.level + 1 : 0;
-
-            //Add the child to the db
-            itemCollection.insert({
-                _id,
-                level,
-                children: [],
-                descendants: 0,
-                completeDescendants: 0,
-                name,
-                done: false,
-                parent: parentId,
-                user: Meteor.userId
-            });
-
-            //Update the parent with the new child
-            itemCollection.update({
-                _id:parentId
-            }, {
-                $push: {
-                    children: _id
-                },
-                $inc: {
-                    descendants: 1
-                }
-            });
+            let _id = addLeaf(parentId, name, Meteor.userId());
+            bubbleAdd(_id);
         } else {
             Errors.noLoginError();
         }
@@ -162,7 +137,7 @@ Meteor.methods({
                     done: !node.done
                 }
             });
-            bubbleComplete(node._id, node.done);
+            bubbleComplete(node._id, node.done ? -1 : 1);
         } else {
             Errors.noLoginError();
         }
@@ -178,15 +153,15 @@ Meteor.methods({
             let node = Check.nodeExists(_id);
             node = Check.nodePermissions(_id, node);
 
+            //Remove from db
+            bubbleRemove(node._id, node.done);
             itemCollection.remove(node._id);
-            if (node.parent){
-                bubbleRemove(node._id, node.done);
-                itemCollection.update(node.parent, {
-                    $pull:{
-                        children: node._id
-                    }
-                });
-            }
+
+            itemCollection.update(node.parent, {
+                $pull:{
+                    children: node._id
+                }
+            });
         }
     }
 });

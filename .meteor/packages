@@ -23,3 +23,7 @@ materialize:materialize
 iron:router
 miro:preloader
 session
+accounts-password
+accounts-facebook
+check
+practicalmeteor:mocha

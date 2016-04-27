@@ -1,0 +1,28 @@
+{
+  "extends": "airbnb/base",
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": {
+        "jsx": false
+    }
+  },
+  "rules": {
+    "indent": ["off", "tab"],
+    "comma-dangle": ["error", "never"],
+    "prefer-arrow-callback": "off",
+    "space-before-function-paren": ["error", "never"],
+    "space-before-blocks": ["error", "never"],
+    "no-var": "error",
+    "prefer-const": "off",
+    "func-names": "off",
+    "max-len": ["warn", 120],
+    "eol-last": "off",
+    "no-param-reassign": "off",
+    "no-underscore-dangle": "off"
+  },
+  "globals": {
+    "describe":true,
+    "it":true
+  }
+}

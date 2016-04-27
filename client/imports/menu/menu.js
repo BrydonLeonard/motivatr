@@ -1,11 +1,10 @@
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
-import { itemCollection } from './../imports/dbSetup';
+import { itemCollection } from '../dbSetup';
 import { Session } from 'meteor/session';
 import './menu.html';
 
 let breadcrumbs = [{name:'home', key:'root', num:0}];
-
 
 Template.todoContainer.onCreated(function(){
     Session.set('activeItem', null);
@@ -49,7 +48,11 @@ Template.todoContainer.events({
         if (confirm('Are you sure?')){
             breadcrumbs.splice(breadcrumbs.length - 1);
             Meteor.call('removeNode', Session.get('activeItem'));
-            Session.set('activeItem', current.parent);
+
+            //Shift up to the parent, or null if on a level 0 node
+            let parent = itemCollection.findOne({children: Session.get('activeItem')});
+            Session.set('activeItem', parent ? parent._id : null);
+
             $('.fixed-action-btn').closeFAB();
         }
     },
@@ -66,57 +69,6 @@ Template.todoContainer.events({
     }
 });
 
-/**
- * Go up one level in the item tree
- */
-let goBack = function(){
-    let current = itemCollection.findOne(Session.get('activeItem'));
-    if (current){
-        Session.set('activeItem', current.parent);
-        breadcrumbs.splice(breadcrumbs.length-1);
-        $('.fixed-action-btn').closeFAB();
-    }
-};
-
-/**
- * Uses the descendants and completeDescendants properties to calculate the completion ratio of a given node.
- * @param _id ID of the node to check
- * @returns {number}
- */
-completePerc = function(_id){
-    let node = itemCollection.findOne(_id);
-    if (node){
-        if (node.descendants > 0) {
-            return node.completeDescendants / node.descendants;
-        }
-        return node.done ? 1 : 0;
-    }
-    return 0;
-};
-
-/**
- * Get the total completion.
- * Considers the completion ratios of top-level items
- * @returns {number}
- */
-let totalComp = function(){
-    let topLevelItems = itemCollection.find({level:0}).fetch();
-    let sum = 0;
-    for (var i = 0; i < topLevelItems.length; i++){
-        sum += completePerc(topLevelItems[i]._id);
-    }
-    return sum / topLevelItems.length;
-};
-
-/**
- * Formats a ratio as a percentage
- * @param perc The ratio
- * @returns {string}
- */
-let formatPerc = function(perc){
-    return (perc*100).toFixed(2) + '%';
-};
-
 Template.todoContainer.helpers({
     /**
      * Gets the children of currently selected item or all root nodes if no item is selected
@@ -126,6 +78,9 @@ Template.todoContainer.helpers({
         if (!Session.get('activeItem')){
             return itemCollection.find({level:0});
         }
+
+        console.log(Session.get('activeItem'));
+
         let children = itemCollection.findOne(Session.get('activeItem')).children;
         return itemCollection.find({
             _id:{
@@ -227,20 +182,60 @@ Template.itemTemp.events({
 });
 
 
-
-let countNotDone = function(item){
-    let thisItem = itemCollection.findOne({_id:item});
-    if (thisItem) {
-        let thisChildren = thisItem.children;
-        let count = 0;
-        if (thisChildren.length > 0) {
-            for (var i = 0; i < thisChildren.length; i++){
-                count += countNotDone(thisChildren[i]);
-            }
-            return count;
-        } else {
-            return thisItem.done?0:1;
-        }
+/**
+ * Go up one level in the item tree
+ */
+let goBack = function(){
+    let current = itemCollection.findOne(Session.get('activeItem'));
+    if (current){
+        Session.set('activeItem', current.parent);
+        breadcrumbs.splice(breadcrumbs.length-1);
+        $('.fixed-action-btn').closeFAB();
     }
 };
 
+/**
+ * Uses the descendants and completeDescendants properties to calculate the completion ratio of a given node.
+ * @param _id ID of the node to check
+ * @returns {number}
+ */
+
+let completePerc = function(_id){
+    let node = itemCollection.findOne(_id);
+    if (node){
+        if (node.descendants > 0) {
+            return node.completeDescendants / node.descendants;
+        }
+        return node.done ? 1 : 0;
+    }
+    return 0;
+};
+
+/**
+ * Get the total completion.
+ * @returns {number}
+ */
+let totalComp = function(){
+    let topLevelItems = itemCollection.find({level:0}).fetch();
+    let sum = 0;
+    let count = 0;
+    for (var i = 0; i < topLevelItems.length; i++){
+        if (topLevelItems[i].descendants === 0){
+            sum += topLevelItems[i].done ? 1 : 0;
+        } else {
+            sum += topLevelItems[i].completeDescendants;
+            sum += (topLevelItems[i].completeDescendants === topLevelItems[i].descendants) ? 1 : 0;
+        }
+        count += topLevelItems[i].descendants;
+    }
+    return sum / (count + topLevelItems.length);
+};
+
+/**
+ * Formats a ratio as a percentage
+ * @param perc The ratio
+ * @returns {string}
+ */
+let formatPerc = function(perc){
+    return (perc*100).toFixed(2) + '%';
+};

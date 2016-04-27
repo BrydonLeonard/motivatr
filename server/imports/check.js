@@ -16,7 +16,7 @@ let nodePermissions = function(_id, node){
     node = node || itemCollection.findOne(_id);
 
     //Extra check to ensure that the node's id is the same as the given id, if the calling method provides both
-    if (node._id == _id && node.user != Meteor.userId){
+    if (node._id == _id && node.user != Meteor.userId()){
         Errors.accessPermError();
     }
 
@@ -27,7 +27,7 @@ let nodePermissions = function(_id, node){
 let nodeExists = function(_id){
     let node = itemCollection.findOne(_id);
 
-    if (node.user != Meteor.userId){
+    if (node.user != Meteor.userId()){
         Errors.nodeNotFoundError();
     }
 

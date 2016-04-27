@@ -20,14 +20,14 @@ let completeClass = function(id){
  * @param parentName The id of the parent, for up-linking the children
  * @returns {Array} An array of children
  */
-let getVisChildren = function(_id, name){
+let getVisChildren = function(_id){
     let arr = [];
     itemCollection.find({parent:_id}).forEach(function(item) {
         arr.push({
-            data: {id: item.name, parent: name},
+            data: {id: item._id, name:item.name, parent: _id},
             classes: completeClass(item._id)
         });
-        arr = arr.concat(getVisChildren(item._id, item.name));
+        arr = arr.concat(getVisChildren(item._id));
     });
     return arr;
 };

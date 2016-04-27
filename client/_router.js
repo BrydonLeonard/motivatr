@@ -4,13 +4,15 @@ Router.configure({
 
 console.log('_router.js');
 
-Router.route('/home', function(){
+Router.route('/menu', function(){
     this.render('todoContainer')
     },{
+        name:'menu',
     onBeforeAction:function(){
         if (!Meteor.userId){
             Router.go('login');
         }
+        require('./imports/menu/menu.js');
         this.next();
     }
 });
@@ -18,6 +20,7 @@ Router.route('/home', function(){
 Router.route('/tree', function() {
     this.render('treeContainer')
     },{
+        name: 'tree',
     onBeforeAction:function(){
         if (!Meteor.userId){
             Router.go('login');
@@ -29,6 +32,7 @@ Router.route('/tree', function() {
 Router.route('/desktop', function() {
     this.render('desktop')
     },{
+        name:'desktop',
     onBeforeAction:function(){
         if (!Meteor.userId){
             Router.go('login');
@@ -40,6 +44,7 @@ Router.route('/desktop', function() {
 Router.route('/login', function() {
     this.render('login')
     }, {
+        name: 'login',
         layoutTemplate: 'blankLayout',
         onBeforeAction: function () {
             require('./imports/login/login.js');
@@ -48,6 +53,22 @@ Router.route('/login', function() {
     }
 );
 
+Router.route('/signup', function() {
+    this.render('signup')
+    }, {
+        name:'signup',
+        layoutTemplate: 'blankLayout',
+        onBeforeAction: function() {
+            require('./imports/signup/signup.js');
+            this.next();
+        }
+    }
+);
+
+/**
+ * Default route.
+ * For now, will redirect to menu screen.
+ */
 Router.route(/\/.*/,function() {
-    Router.go('home');
+    Router.go('menu');
 });
