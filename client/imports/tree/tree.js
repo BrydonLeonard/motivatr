@@ -3,7 +3,7 @@ import { ReactiveVar } from 'meteor/reactive-var';
 import { Mongo } from 'meteor/mongo';
 import cytoscape from './../imports/cytoscape'; //Until the failed to parse sourcemap bug is fixed, we load this ourselves
 import './tree.html';
-import './jqtree.css';
+import './../desktop/jqtree.css';
 
 Template.treeContainer.onRendered(function(){
     Tracker.autorun(function(){

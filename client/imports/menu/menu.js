@@ -8,6 +8,7 @@ let breadcrumbs = [{name:'home', key:'root', num:0}];
 
 Template.todoContainer.onCreated(function(){
     Session.set('activeItem', null);
+    Meteor.subscribe('itemCollection');
 });
 
 Template.todoContainer.events({

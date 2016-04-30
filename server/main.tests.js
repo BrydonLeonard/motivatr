@@ -1,8 +1,9 @@
+import { Meteor } from 'meteor/meteor';
 import { expect } from 'meteor/practicalmeteor:chai';
 import { itemCollection } from './imports/dbSetup';
-import './main.js';
+import './main';
 
-let resetDb = function(){
+let resetDB = function(user){
     itemCollection.remove({});
 
     // Insert framework objects, with only fields necessary for testing
@@ -12,7 +13,8 @@ let resetDb = function(){
         completeDescendants: 1,
         name: 'root',
         parent: null,
-        children: []
+        children: [],
+        user
     });
 
     let l1 = itemCollection.insert({
@@ -21,7 +23,8 @@ let resetDb = function(){
         completeDescendants: 1,
         name: 'l1',
         parent: root,
-        children: []
+        children: [],
+        user
     });
 
     itemCollection.update(root, {
@@ -36,7 +39,8 @@ let resetDb = function(){
         completeDescendants: 0,
         name: 'l2done',
         done: true,
-        parent: l1
+        parent: l1,
+        user
     });
 
     let l2not = itemCollection.insert({
@@ -45,7 +49,8 @@ let resetDb = function(){
         completeDescendants: 0,
         name: 'l2not',
         done: false,
-        parent: l1
+        parent: l1,
+        user
     });
 
     itemCollection.update(l1, {
@@ -55,7 +60,6 @@ let resetDb = function(){
             }
         }
     });
-
     return {
         root,
         l1,
@@ -64,15 +68,18 @@ let resetDb = function(){
     }
 };
 
-describe('Server methods', () => {
+
+describe('Meteor Methods', () => {
     describe('Tree modifiers', () => {
         let root;
         let l1;
         let l2done;
         let l2not;
+        let userId;
 
         beforeEach(() => {
-            let vals = resetDb();
+            userId = '10';
+            let vals = resetDB(10);
             root = vals.root;
             l1 = vals.l1;
             l2done = vals.l2done;
@@ -80,7 +87,10 @@ describe('Server methods', () => {
         });
 
         it('can add a new leaf node', () => {
-            Meteor.call('addChild', l1, 'newNode');
+            let addChild = Meteor.server.method_handlers['addChild'];
+            let invocation = { userId };
+
+            addChild.apply(invocation, [l1, 'newNode']);
 
             let thisItem = itemCollection.findOne({name: 'newNode'});
             expect(thisItem).to.exist;
@@ -100,7 +110,10 @@ describe('Server methods', () => {
         });
 
         it('can toggle a node (complete -> incomplete)', () => {
-            Meteor.call('toggleComplete', l2done);
+            let toggleComplete = Meteor.server.method_handlers['toggleComplete'];
+            let invocation = { userId };
+
+            toggleComplete.apply(invocation, [l2done]);
 
             let thisItem = itemCollection.findOne(l2done);
 
@@ -118,7 +131,10 @@ describe('Server methods', () => {
         });
 
         it('can toggle a node (incomplete -> complete)', () => {
-            Meteor.call('toggleComplete', l2not);
+            let toggleComplete = Meteor.server.method_handlers['toggleComplete'];
+            let invocation = { userId };
+
+            toggleComplete.apply(invocation, [l2not]);
 
             let thisItem = itemCollection.findOne(l2not);
 
@@ -136,7 +152,10 @@ describe('Server methods', () => {
         });
 
         it('can remove an incomplete node', () => {
-            Meteor.call('removeNode', l2not);
+            let removeNode = Meteor.server.method_handlers['removeNode'];
+            let invocation = { userId };
+
+            removeNode.apply(invocation, [l2not]);
 
             let parent = itemCollection.findOne(l1);
             let grandparent = itemCollection.findOne(root);
@@ -149,7 +168,10 @@ describe('Server methods', () => {
         });
 
         it('can remove a complete node', () => {
-            Meteor.call('removeNode', l2done);
+            let removeNode = Meteor.server.method_handlers['removeNode'];
+            let invocation = { userId };
+
+            removeNode.apply(invocation, [l2done]);
 
             let parent = itemCollection.findOne(l1);
             let grandparent = itemCollection.findOne(root);
@@ -162,31 +184,59 @@ describe('Server methods', () => {
         });
     });
 
+    //TODO test will multiple trees
     describe('Tree data generators', () => {
         let root;
         let l1;
         let l2done;
         let l2not;
+        let userId;
 
         beforeEach(() => {
-            let vals = resetDb();
+            userId = '10';
+            let vals = resetDB(userId);
             root = vals.root;
             l1 = vals.l1;
             l2done = vals.l2done;
             l2not = vals.l2not;
         });
 
+
         it('can generate the structure to be displayed by jqtree', () => {
+            let desktopTreeData = Meteor.server.method_handlers['desktopTreeData'];
+            let invocation = { userId };
+
+            let data = desktopTreeData.apply(invocation)[0];
+
+            let expected = {
+                id: root,
+                label: 'root',
+                children: [{
+                    id:l1,
+                    label:'l1',
+                    children: [{
+                        id:l2done,
+                        label:'l2done',
+                        children:[]
+                    },{
+                        id:l2not,
+                        label:'l2not',
+                        children:[]
+                    }]
+                }]
+            }
+
+            expect(data).to.eql(expected);
+
+        });
+
+        it('can generate the structure to be displayed by cytoscape', () => {
             // We need to be able to give a funciton that takes a callback to Meteor.wrapAsync
             // This function is the one we're going to send
-            let f = function(callback){
-                Meteor.call('visTreeData', callback);
-            };
-            // Create a synchronous function from f
-            let data = Meteor.wrapAsync(f);
-            // Run Meteor.call('visTreeData') synchronously
-            data = data();
+            let visTreeData = Meteor.server.method_handlers['visTreeData'];
+            let invocation = { userId };
 
+            let data = visTreeData.apply(invocation);
             let expected = [{ data: { id: root, parent: null, name: 'root' }, classes: 'root' },
              { data: { id: l1, name: 'l1', parent: root }, classes: '' },
              { data: { id: l2done, name: 'l2done', parent: l1 }, classes: '' },
@@ -195,9 +245,10 @@ describe('Server methods', () => {
              { data: { id: 'edgeId1', target: l2done, source: l1 } },
              { data: { id: 'edgeId2', target: l2not, source: l1 } }];
 
-            console.log(data == expected);
-
-            expect(data).to.have.same.members(expected);
+            for (let i = 0; i < data.length; i++){
+                expect(data[i]).to.eql(expected[i]);
+            }
         });
+
     });
 });

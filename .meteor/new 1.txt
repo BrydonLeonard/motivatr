@@ -1,0 +1,63 @@
+
+
+Assertions --
+Run -> Edit configs -> Application -> -ea in vm options
+
+JUnit
+Alt enter on class -> Create tests
+JUnit4
+Generate tests for required classes
+can use 
+	try{
+		somethingThatShouldFail();
+		fail("this will cause the test to fail");
+	} catch (Exception e){
+		//if we reach here, the method failed as expected
+	}
+
+
+
+Disconnect from db --
+con.close();
+
+Iterating through ResultSets --
+while(rs.next){
+	String someString = rs.getString("someString");
+	Integer someInt = rs.getInt("someInt");
+	etc...
+}
+
+Layout Panes --
+BorderPane
+HBox
+VBox
+StackPane
+GridPane
+FlowPane
+TilePane
+AnchorPane
+
+GUI --
+extend Application
+implement start(PrimaryStage ps)
+ps.setTitle()
+ps.setScene(new Scene(layout, width, height))
+ps.show()
+
+Logger --
+Logger log = Logger.getGlobal();
+log.addHandler(new FileHandler("log.txt");
+log.setLevel(Level.ALL);
+
+Connect to db --
+Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+Connection con = DriverManager.getConnection(connectionString, userName, password);
+Statement stmt = con.createStatement();
+
+Using db connection --
+ResultSet rs = stmt.executeQuery(query);
+stmt.executeUpdate(updateQuery);
+
+Get keys from insert objects
+stmt.executeUpdate(sql)
+ResultSet Ids = stmt.getGeneratedKeys();

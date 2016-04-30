@@ -24,12 +24,13 @@ Meteor.methods({
      *   classes
      */
     visTreeData: function(){
-        if (Meteor.userId) {
+        let userId = this.userId;
+        if (userId){
             let data = [];
 
             //All top-level items for the logged in user
             //TODO: this should be synchronous. Just make sure
-            itemCollection.find({level: 0, user: Meteor.userId}).forEach(function (item) {
+            itemCollection.find({level: 0, user: userId}).forEach(function (item) {
                 data.push({
                     data: {
                         id: item._id,
@@ -77,10 +78,11 @@ Meteor.methods({
      *      children:[]
      *   }
      */
-    desktopTreeData: function(callback){
-        if (Meteor.userId){
+    desktopTreeData: function(){
+        let userId = this.userId;
+        if (userId){
             let data = [];
-            itemCollection.find({level:0, user:Meteor.userId}).forEach(function(item){
+            itemCollection.find({level:0, user:userId}).forEach(function(item){
                 let temp = {
                     id: item._id,
                     label: (item.name + completeLabel(item._id)),
@@ -91,7 +93,7 @@ Meteor.methods({
                 data.push(temp);
             });
 
-            callback(data);
+            return data;
         } else {
             Errors.noLoginError();
         }
@@ -102,15 +104,16 @@ Meteor.methods({
      * @param name The child node's name
      */
     addChild: function(parentId, name){
-        if (Meteor.userId){
+        let userId = this.userId;
+        if (userId){
             check(parentId, Match.OneOf(String, null));
             check(name, String);
 
             if (parentId != null) {
-                Check.nodePermissions(parentId);
+                Check.nodePermissions(userId, parentId);
             }
 
-            let _id = addLeaf(parentId, name, Meteor.userId());
+            let _id = addLeaf(parentId, name, userId);
             bubbleAdd(_id);
         } else {
             Errors.noLoginError();
@@ -122,11 +125,12 @@ Meteor.methods({
      * @param _id
      */
     toggleComplete: function(_id){
-        if (Meteor.userId) {
+        let userId = this.userId;
+        if (userId){
             check(_id, String);
 
-            let node = Check.nodeExists(_id);
-            node = Check.nodePermissions(_id, node);
+            let node = Check.nodeExists(userId, _id);
+            node = Check.nodePermissions(userId, _id, node);
 
             if (node.descendants > 0){
                 throw new Meteor.Error('not-leaf-node', 'You can only mark a leaf node as complete');
@@ -147,11 +151,12 @@ Meteor.methods({
      * @param _id
      */
     removeNode: function(_id){
-        if (Meteor.userId){
+        let userId = this.userId;
+        if (userId){
             check(_id, String);
 
-            let node = Check.nodeExists(_id);
-            node = Check.nodePermissions(_id, node);
+            let node = Check.nodeExists(userId, _id);
+            node = Check.nodePermissions(userId, _id, node);
 
             //Remove from db
             bubbleRemove(node._id, node.done);
@@ -166,6 +171,9 @@ Meteor.methods({
     }
 });
 
+Meteor.publish('itemCollection', function(){
+    return itemCollection.find({user:this.userId});
+});
 
 
 

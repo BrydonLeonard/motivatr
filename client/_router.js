@@ -9,7 +9,7 @@ Router.route('/menu', function(){
     },{
         name:'menu',
     onBeforeAction:function(){
-        if (!Meteor.userId){
+        if (!Meteor.userId()){
             Router.go('login');
         }
         require('./imports/menu/menu.js');
@@ -22,9 +22,10 @@ Router.route('/tree', function() {
     },{
         name: 'tree',
     onBeforeAction:function(){
-        if (!Meteor.userId){
+        if (!Meteor.userId()){
             Router.go('login');
         }
+        require('./imports/tree/tree.js');
         this.next();
     }
 });
@@ -34,9 +35,10 @@ Router.route('/desktop', function() {
     },{
         name:'desktop',
     onBeforeAction:function(){
-        if (!Meteor.userId){
+        if (!Meteor.userId()){
             Router.go('login');
         }
+        require('./imports/desktop/desktop.js');
         this.next();
     }
 });
@@ -70,5 +72,6 @@ Router.route('/signup', function() {
  * For now, will redirect to menu screen.
  */
 Router.route(/\/.*/,function() {
-    Router.go('menu');
-});
+        Router.go('menu');
+    }
+);

@@ -12,11 +12,11 @@ import { itemCollection } from './dbSetup';
  * @param node (optional) The node object
  * @returns The node that was checked
  */
-let nodePermissions = function(_id, node){
+let nodePermissions = function(user, _id, node){
     node = node || itemCollection.findOne(_id);
 
     //Extra check to ensure that the node's id is the same as the given id, if the calling method provides both
-    if (node._id == _id && node.user != Meteor.userId()){
+    if (node._id == _id && node.user != user){
         Errors.accessPermError();
     }
 
@@ -24,10 +24,10 @@ let nodePermissions = function(_id, node){
 };
 
 
-let nodeExists = function(_id){
+let nodeExists = function(user, _id){
     let node = itemCollection.findOne(_id);
 
-    if (node.user != Meteor.userId()){
+    if (!node){
         Errors.nodeNotFoundError();
     }
 
