@@ -1,8 +1,5 @@
 import './login.html';
 
-//Testing script loading
-console.log('login.js');
-
 Template.login.events({
     'submit #loginForm':function(event){
         event.preventDefault();

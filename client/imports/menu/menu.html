@@ -1,4 +1,6 @@
 <template name="todoContainer">
+
+    <!--BREADCRUMBS-->
     <nav class="teal lighten-3 breadcrumb-holder">
         <div class="nav-wrapper teal lighten-3">
             <div class="col s12">
@@ -8,19 +10,28 @@
             </div>
         </div>
     </nav>
+    <!--/BREADCRUMBS-->
+
+    <!--PROGRESS BAR-->
     <div class="progress">
-        <div class="determinate {{#if done}}teal accent-4{{/if}}" style="width: {{donePercentage}}"></div>
+        <div class="determinate" style="width: {{donePercentage}}"></div>
     </div>
+    <!--/PROGRESS BAR-->
     <div class="container">
-        <div class="fixed-action-btn vertical" style="bottom: 45px; right:25px">
-            <a class="btn-floating btn-large teal accent-4">
+
+        <!--FABS-->
+        <div class="fixed-action-btn vertical click-to-toggle" style="bottom: 45px; right:25px" id="controls-fab">
+            <a class="btn-floating btn-large {{#if itemSelected}}orange lighten-2{{else}}teal accent-4{{/if}}" id="controls-fab-a">
                 <i class="material-icons">more_horiz</i>
             </a>
             <ul>
-                <li><a class="btn-floating teal accent-4" id="add"><i class="material-icons">add</i></a></li>
-                {{#if noChildren}}
-                    <li><a class="btn-floating {{#if done}}red lighten-2{{else}}teal accent-4{{/if}}" id="done"><i class="material-icons">{{#if done}}close{{else}}check{{/if}}</i></a></li>
-                    <li><a class="btn-floating red lighten-2" id="remove"><i class="material-icons">delete</i></a></li>
+                {{#if itemSelected}}
+                    <li><a class="btn-floating orange lighten-2" id="splitChild"><i class="material-icons">call_split</i></a></li>
+                    <li><a class="btn-floating orange lighten-2" id="done"><i class="material-icons">{{#if isDone}}close{{else}}check{{/if}}</i></a></li>
+                    <li><a class="btn-floating orange lighten-2" id="remove"><i class="material-icons">delete_forever</i></a></li>
+                    <li><a class="btn-floating teal accent-4" id="add"><i class="material-icons">add</i></a></li>
+                {{else}}
+                    <li><a class="btn-floating teal accent-4" id="add"><i class="material-icons">add</i></a></li>
                 {{/if}}
             </ul>
         </div>
@@ -31,22 +42,20 @@
                 </a>
             </div>
         {{/unless}}
-        {{#if noChildren}}
-            <blockquote>
-                This task has no subtasks. Click toggle to mark it as {{#if done}}unfinished{{else}}finished{{/if}}.
-                Click remove to delete this task.
-            </blockquote>
-        {{else}}
-            <div class="collection">
-                {{#each item}}
-                    {{>itemTemp}}
-                {{/each}}
-            </div>
-        {{/if}}
+        <!--/FABS-->
+
+        <!--BODY-->
+        <div class="collection">
+            {{#each item}}
+                {{>itemTemp}}
+            {{/each}}
+        </div>
+        <!--/BODY-->
+
         <br>
     </div>
 </template>
 
 <template name="itemTemp">
-    <a href="#" class="itemLink collection-item dismissable">{{name}}<span class="badge">{{{numNotDone}}}</span></a>
+    <a href="#" class="itemLink collection-item {{isActive}}">{{name}}<span class="badge">{{{numNotDone}}}</span></a>
 </template>

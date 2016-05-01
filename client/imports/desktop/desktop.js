@@ -1,13 +1,14 @@
 import { Meteor } from 'meteor/meteor';
-import { tree } from 'node_modules/jqtree';
-import { itemCollection } from '../imports/dbSetup';
+import { itemCollection } from '../dbSetup';
+import 'jqtree';
+import './jqtree.css';
 import './desktop.html';
 
 let state = null;
 let selectedState = null;
 
 let $tree = null;
-
+/*
 let inputHandler = function(event){
     event.preventDefault();
     switch(event.keyCode){
@@ -26,41 +27,17 @@ let inputHandler = function(event){
 };
 
 let addChild = function() {
-    var node = $tree.tree('getSelectedNode');
+    let node = $tree.tree('getSelectedNode');
     let newName = prompt('New node name');
     if (newName){
-        let newId = new Meteor.Collection.ObjectID()._str;
-        $tree.tree('appendNode',{
-            label:newName,
-            id:newId
-        },node);
-
-        if (node) {
-            itemCollection.insert({
-                _id: newId,
-                children: [],
-                done: false,
-                level: node.getLevel(),
-                name: newName,
-                parent: node.id
-            });
-            itemCollection.update({_id: node.id}, {$push: {children: newId}});
-            let match = / \[DONE]/.exec(node.name);
-            $tree.tree('openNode', node);
-            selectedState = $tree.tree('selectNode', node);
-        } else {
-            itemCollection.insert({
-                _id: newId,
-                children: [],
-                done: false,
-                level: 0,
-                name: newName,
-                parent: null
-            });
-            selectedState = $tree.tree('selectNode', $tree.tree('getNodeById', newId));
-        }
+        let parentId = node ? node.id : null;
+        Meteor.call('addChild', parentId, newName);
+        let match = / \[DONE]/.exec(node.name);
+        $tree.tree('openNode', node);
+        selectedState = $tree.tree('selectNode', node);
     }
 };
+
 
 let complete = function(){
     let selectedNode = $tree.tree('getSelectedNode');
@@ -71,9 +48,6 @@ let complete = function(){
             $tree.tree('removeFromSelection', selectedNodes[i]);
         }
     }
-    console.log(selectedNodes);
-    console.log($tree.tree('getSelectedNodes'));
-
 };
 
 let recComplete = function(node){
@@ -134,34 +108,41 @@ let addGroup = function(){
         });
         selectedState = $tree.tree('selectNode', $tree.tree('getNodeById', newId));
     }
-};
+};*/
 
 Template.desktop.onRendered(function(){
-    $(document).on('keydown', inputHandler);
-    Tracker.autorun(function () {
-            Meteor.call('desktopTreeData', function (result) {
-                if (result.length > 0) {
-                    let selected = result[0].id;
-                    $tree = $('#tree');
-                    $tree.tree();
-                    $tree.tree('loadData', result);
-                    let firstNode = $tree.tree('getNodeById', selected);
-                    $tree.tree('selectNode', firstNode);
-                    if (state){
-                        $tree.tree('setState', state);
-                    }
-                    let selectedNodes = $tree.tree('getSelectedNodes');
-                    if (selectedNodes.length > 1){
-                        for (var i = 0; i < selectedNodes.length-1; i++){
-                            $tree.tree('removeFromSelection', selectedNodes[i]);
-                        }
-                    }
-                    if (selectedState){
-                        $tree.tree('selectNode', selectedState);
-                        console.log($tree.tree('getSelectedNode'));
-                    }
+   // $(document).on('keydown', inputHandler);
+    Meteor.call('desktopTreeData', function (e, result) {
+        if (result.length > 0) {
+            let selected = result[0].id;
+
+            //Initialise tree
+            $tree = $('#tree');
+            $tree.tree();
+            $tree.tree('loadData', result);
+
+            //Select the first node by default
+            let firstNode = $tree.tree('getNodeById', selected);
+            $tree.tree('selectNode', firstNode);
+
+            //If a tree state exists, apply it
+            if (state){
+                $tree.tree('setState', state);
+            }
+
+            //If more than 1 node is selected, deselect down to 1
+            let selectedNodes = $tree.tree('getSelectedNodes');
+            if (selectedNodes && selectedNodes.length > 1){
+                for (var i = 0; i < selectedNodes.length-1; i++){
+                    $tree.tree('removeFromSelection', selectedNodes[i]);
                 }
-            });
+            }
+
+            //If a selected state exists, apply it
+            if (selectedState){
+                $tree.tree('selectNode', selectedState);
+            }
+        }
     });
 });
 

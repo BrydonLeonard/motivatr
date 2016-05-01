@@ -117,6 +117,7 @@ let removeLeaf = function(_id){
  * Does <b>not</b> bubble the changes
  * @param parentId The ID of the parent of the new node, or null to add a root node
  * @param name The name of the new node
+ * @param user The user that owns the node
  * @returns {String} The id of the new node
  */
 let addLeaf = function(parentId, name, user){

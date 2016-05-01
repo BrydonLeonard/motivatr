@@ -17,14 +17,19 @@ let completeClass = function(id){
 /**
  * Helper function to recursively fetch the children of an element
  * @param _id The ID of the element whose children we should check
- * @param parentName The id of the parent, for up-linking the children
  * @returns {Array} An array of children
  */
 let getVisChildren = function(_id){
     let arr = [];
     itemCollection.find({parent:_id}).forEach(function(item) {
         arr.push({
-            data: {id: item._id, name:item.name, parent: _id},
+            data: {
+                id: item._id,
+                name:item.name
+            },
+            scratch: {
+                parent: _id
+            },
             classes: completeClass(item._id)
         });
         arr = arr.concat(getVisChildren(item._id));

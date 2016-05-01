@@ -90,13 +90,13 @@ describe('Meteor Methods', () => {
             let addChild = Meteor.server.method_handlers['addChild'];
             let invocation = { userId };
 
-            addChild.apply(invocation, [l1, 'newNode']);
+            let _id = addChild.apply(invocation, [l1, 'newNode']);
 
             let thisItem = itemCollection.findOne({name: 'newNode'});
             expect(thisItem).to.exist;
+            expect(thisItem._id).to.equal(_id);
 
             expect(thisItem.parent).to.equal(l1);
-            expect(thisItem.name).to.equal('newNode');
             expect(thisItem.descendants).to.equal(0);
             expect(thisItem.completeDescendants).to.equal(0);
             expect(thisItem.done).to.equal(false);
@@ -104,9 +104,51 @@ describe('Meteor Methods', () => {
             let parent = itemCollection.findOne({children: thisItem._id});
             expect(parent).to.exist;
 
-            expect(parent.children).to.include.members([thisItem._id]);
             expect(parent.descendants).to.equal(3);
             expect(parent.completeDescendants).to.equal(1);
+        });
+
+        it('can add a new leaf node to a completed node', () => {
+            let addChild = Meteor.server.method_handlers['addChild'];
+            let invocation = { userId };
+
+            let _id = addChild.apply(invocation, [l2done, 'newNode']);
+
+            let thisItem = itemCollection.findOne({name: 'newNode'});
+            expect(thisItem).to.exist;
+            expect(thisItem._id).to.equal(_id);
+
+            expect(thisItem.parent).to.equal(l2done);
+            expect(thisItem.descendants).to.equal(0);
+            expect(thisItem.completeDescendants).to.equal(0);
+            expect(thisItem.done).to.equal(false);
+
+            let parent = itemCollection.findOne({children: thisItem._id});
+            expect(parent).to.exist;
+            expect(parent.descendants).to.equal(1);
+            expect(parent.completeDescendants).to.equal(0);
+
+            let grandParent = itemCollection.findOne(l1);
+            expect(grandParent.descendants).to.equal(3);
+            expect(grandParent.completeDescendants).to.equal(0);
+        });
+
+        it('can add a new root node', () => {
+            let addChild = Meteor.server.method_handlers['addChild'];
+            let invocation = { userId };
+
+            let _id = addChild.apply(invocation, [null, 'newNode']);
+
+            let thisItem = itemCollection.findOne({name: 'newNode'});
+            expect(thisItem).to.exist;
+            expect(thisItem._id).to.equal(_id);
+
+            expect(thisItem.parent).to.equal(null);
+            expect(thisItem.descendants).to.equal(0);
+            expect(thisItem.completeDescendants).to.equal(0);
+            expect(thisItem.done).to.equal(false);
+
+            expect(itemCollection.find({children: thisItem._id}).count()).to.equal(0);
         });
 
         it('can toggle a node (complete -> incomplete)', () => {

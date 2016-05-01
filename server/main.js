@@ -34,13 +34,15 @@ Meteor.methods({
                 data.push({
                     data: {
                         id: item._id,
-                        parent: null,
                         name: item.name
+                    },
+                    scratch: {
+                        parent: null,
                     },
                     classes: completeClass(item._id) + 'root'
                 });
 
-                for (let child of getVisChildren(item._id, item.name)) {
+                for (let child of getVisChildren(item._id)) {
                     data.push(child);
                 }
             });
@@ -50,12 +52,12 @@ Meteor.methods({
             let edgeCount = 0;
 
             for (var item of data) {
-                if (item.data.parent != null) {
+                if (item.scratch.parent != null) {
                     edges.push({
                         data: {
                             id: 'edgeId' + String(edgeCount++),
                             target: item.data.id,
-                            source: item.data.parent
+                            source: item.scratch.parent
                         }
                     });
                 }
@@ -102,9 +104,13 @@ Meteor.methods({
      * Adds a child node to the given parent
      * @param parentId The parent ID
      * @param name The child node's name
+     * @return The new id
      */
     addChild: function(parentId, name){
         let userId = this.userId;
+
+        let _id;
+
         if (userId){
             check(parentId, Match.OneOf(String, null));
             check(name, String);
@@ -113,11 +119,23 @@ Meteor.methods({
                 Check.nodePermissions(userId, parentId);
             }
 
-            let _id = addLeaf(parentId, name, userId);
+            let parent = itemCollection.findOne(parentId);
+            if (parent && parent.done){
+                itemCollection.update(parentId, {
+                    $set: {
+                        done: false
+                    }
+                });
+                bubbleComplete(parentId, -1);
+            }
+
+            _id = addLeaf(parentId, name, userId);
             bubbleAdd(_id);
         } else {
             Errors.noLoginError();
         }
+
+        return _id;
     },
     /**
      * Toggles an item between complete and incomplete.

@@ -2,12 +2,15 @@ import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
 import { itemCollection } from '../dbSetup';
 import { Session } from 'meteor/session';
+import { Meteor } from 'meteor/meteor';
 import './menu.html';
 
+let breadcrumbDep = new Tracker.Dependency;
 let breadcrumbs = [{name:'home', key:'root', num:0}];
 
 Template.todoContainer.onCreated(function(){
     Session.set('activeItem', null);
+    Session.set('selectedItem', null);
     Meteor.subscribe('itemCollection');
 });
 
@@ -33,31 +36,6 @@ Template.todoContainer.events({
         goBack();
     },
     /**
-     * Toggle complete button is clicked
-     * @param event
-     */
-    'click #done':function(event){
-        event.preventDefault();
-        Meteor.call('toggleComplete', Session.get('activeItem'));
-    },
-    /**
-     * Remove item button is clicked
-     * @param event
-     */
-    'click #remove':function(event){
-        event.preventDefault();
-        if (confirm('Are you sure?')){
-            breadcrumbs.splice(breadcrumbs.length - 1);
-            Meteor.call('removeNode', Session.get('activeItem'));
-
-            //Shift up to the parent, or null if on a level 0 node
-            let parent = itemCollection.findOne({children: Session.get('activeItem')});
-            Session.set('activeItem', parent ? parent._id : null);
-
-            $('.fixed-action-btn').closeFAB();
-        }
-    },
-    /**
      * A breadcrumb is clicked
      * @param event
      */
@@ -66,6 +44,46 @@ Template.todoContainer.events({
         let iter = $('.breadcrumb').length - ($(event.target).index() + 1);
         for (let i = 0; i < iter; i++){
             goBack();
+        }
+    },
+    //Below this point are events for buttons that relate to clicking on a leaf node
+    /**
+     * Toggle complete button is clicked
+     * @param event
+     */
+    'click #done':function(event){
+        event.preventDefault();
+        Meteor.call('toggleComplete', Session.get('selectedItem'));
+        closeFab();
+    },
+    /**
+     * Remove item button is clicked
+     * @param event
+     */
+    'click #remove':function(event){
+        event.preventDefault();
+        if (confirm('Are you sure?')){
+            Meteor.call('removeNode', Session.get('selectedItem'));
+            Session.set('selectedItem', null);
+
+            let thisNode = itemCollection.findOne(Session.get('activeItem'));
+            closeFab();
+
+            if (thisNode && thisNode.children.length - 1 === 0){
+                goBack();
+            }
+        }
+    },
+    'click #splitChild':function(event){
+        event.preventDefault();
+        let name = prompt('Enter subtask name');
+        if (name){
+            Meteor.call('addChild', Session.get('selectedItem'), name, function(e, _id){
+                let moveTo = itemCollection.findOne(Session.get('selectedItem'));
+                goToChild(moveTo._id, moveTo.name);
+                closeFab();
+            });
+
         }
     }
 });
@@ -80,25 +98,12 @@ Template.todoContainer.helpers({
             return itemCollection.find({level:0});
         }
 
-        console.log(Session.get('activeItem'));
-
         let children = itemCollection.findOne(Session.get('activeItem')).children;
         return itemCollection.find({
             _id:{
                 $in:children
             }
         });
-    },
-    /**
-     * Returns true if the active node has no children
-     * @returns {Boolean}
-     */
-    noChildren:function(){
-        let thisItem = itemCollection.findOne(Session.get('activeItem'));
-        if (thisItem) {
-            return (!thisItem.children.length);
-        }
-        return false;
     },
     /**
      * Returns the percentage completion for a given node. Formatted as a percentage
@@ -111,28 +116,37 @@ Template.todoContainer.helpers({
         return formatPerc(completePerc(Session.get('activeItem')));
     },
     /**
-     * Checks whether all items are complete
-     * @returns {boolean}
-     */
-    done:function(){
-        if (Session.get('activeItem')){
-            return totalComp() == 1;
-        }
-        return completePerc(Session.get('activeItem')) == 1;
-    },
-    /**
      * Returns the array of breadcrumbs as Strings
      * @returns {[String]}
      */
     breadcrumbs:function(){
+        breadcrumbDep.depend();
         return breadcrumbs;
     },
+    //Below are the helpers for selected items
     /**
      * Checks whether the currently selected node is the root
      * @returns {boolean}
      */
     root:function(){
         return !Session.get('activeItem');
+    },
+    /**
+     * Returns true if a node is currently selected
+     * @returns {Boolean}
+     */
+    itemSelected:function(){
+        if (Session.get('selectedItem')){
+            return true;
+        }
+        return false;
+    },
+    'isDone':function(){
+        let thisItem = itemCollection.findOne(Session.get('selectedItem'));
+        if (thisItem && thisItem.done){
+            return true;
+        }
+        return false;
     }
 });
 
@@ -162,10 +176,13 @@ Template.itemTemp.helpers({
     'numNotDone':function(){
         if (this.descendants > 0) {
             let num = this.descendants - this.completeDescendants;
-            return num > 0 ? num + ' left' : '<i class="material-icons">done_all</i>';
+            return num > 0 ? num + ' left' : '<i class="material-icons">done</i>';
         }else{
             return this.done ? '<i class="material-icons">done</i>' : '<i class="material-icons">clear</i>';
         }
+    },
+    'isActive':function(){
+        return (this._id == Session.get('selectedItem')) ? ' active' : '';
     }
 });
 
@@ -176,11 +193,33 @@ Template.itemTemp.events({
      */
     'click .itemLink':function(event){
         event.preventDefault();
-        breadcrumbs.push({name:this.name, 'key':this._id});
-        Session.set('activeItem', this._id);
-        $('.fixed-action-btn').closeFAB();
+        if (this.children.length > 0){
+            goToChild(this._id, this.name);
+            closeFab();
+        } else {
+            if (Session.get('selectedItem') === this._id){
+                Meteor.call('toggleComplete', Session.get('selectedItem'));
+            } else {
+                Session.set('selectedItem', this._id);
+                Tracker.afterFlush(function () {
+                    openFab();
+                });
+            }
+        }
     }
 });
+
+/**
+ * Moves the active child to the one with the provided _id
+ * @param _id The id of the child
+ * @param name The name of the child
+ */
+let goToChild = function(_id, name) {
+    breadcrumbs.push({name:name, 'key':_id});
+    breadcrumbDep.changed();
+    Session.set('activeItem', _id);
+    Session.set('selectedItem', null);
+};
 
 
 /**
@@ -190,13 +229,15 @@ let goBack = function(){
     let current = itemCollection.findOne(Session.get('activeItem'));
     if (current){
         Session.set('activeItem', current.parent);
-        breadcrumbs.splice(breadcrumbs.length-1);
-        $('.fixed-action-btn').closeFAB();
+        breadcrumbs.splice(breadcrumbs.length - 1);
+        breadcrumbDep.changed();
+        Session.set('selectedItem', null);
+        closeFab();
     }
 };
 
 /**
- * Uses the descendants and completeDescendants properties to calculate the completion ratio of a given node.
+ * Uses the descendants and completeDescendants pr1rties to calculate the completion ratio of a given node.
  * @param _id ID of the node to check
  * @returns {number}
  */
@@ -218,6 +259,7 @@ let completePerc = function(_id){
  */
 let totalComp = function(){
     let topLevelItems = itemCollection.find({level:0}).fetch();
+
     let sum = 0;
     let count = 0;
     for (var i = 0; i < topLevelItems.length; i++){
@@ -239,4 +281,15 @@ let totalComp = function(){
  */
 let formatPerc = function(perc){
     return (perc*100).toFixed(2) + '%';
+};
+
+/**
+ * Opens the fab controls
+ */
+let openFab = function(){
+    $('#controls-fab').openFAB();
+};
+
+let closeFab = function(){
+    $('#controls-fab').closeFAB();
 };
