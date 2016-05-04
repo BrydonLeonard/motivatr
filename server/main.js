@@ -5,10 +5,12 @@ import { completeClass, getVisChildren } from './imports/visTreeHelpers';
 import { completeLabel, getDesktopChildren } from './imports/desktopTreeHelpers';
 import * as Errors from './imports/errors';
 import * as Check from './imports/check';
-import { bubbleComplete, bubbleRemove, bubbleAdd, addLeaf, removeLeaf } from './imports/treeHelpers';
+import { bubbleComplete, bubbleRemove, sinkRemove,  bubbleAdd, addLeaf, removeLeaf } from './imports/treeHelpers';
+import { initServices } from './imports/services';
+import moment from 'moment';
 
 Meteor.startup(() => {
-  // code to run on server at startup
+    initServices();
 });
 
 
@@ -104,9 +106,10 @@ Meteor.methods({
      * Adds a child node to the given parent
      * @param parentId The parent ID
      * @param name The child node's name
+     * @param date The due date of the new item (Optional)
      * @return The new id
      */
-    addChild: function(parentId, name){
+    addChild: function(parentId, name, date){
         let userId = this.userId;
 
         let _id;
@@ -114,6 +117,12 @@ Meteor.methods({
         if (userId){
             check(parentId, Match.OneOf(String, null));
             check(name, String);
+
+            let formattedDate = (date != null) ? moment(date, 'DD MMMM, YYYY') : null;
+
+            if (date && formattedDate != null){
+                check(formattedDate.isValid(), true);
+            }
 
             if (parentId != null) {
                 Check.nodePermissions(userId, parentId);
@@ -129,7 +138,7 @@ Meteor.methods({
                 bubbleComplete(parentId, -1);
             }
 
-            _id = addLeaf(parentId, name, userId);
+            _id = addLeaf(parentId, name, userId, (formattedDate != null) ? formattedDate.toDate() : null);
             bubbleAdd(_id);
         } else {
             Errors.noLoginError();
@@ -178,6 +187,7 @@ Meteor.methods({
 
             //Remove from db
             bubbleRemove(node._id, node.done);
+            sinkRemove(node._id);
             itemCollection.remove(node._id);
 
             itemCollection.update(node.parent, {
@@ -185,6 +195,23 @@ Meteor.methods({
                     children: node._id
                 }
             });
+        }
+    },
+    /**
+     * Removes the children of a given node
+     * @param _id The id of the node whose children should be removed
+     */
+    removeChildren: function(_id){
+        let userId = this.userId;
+        if (userId){
+            check(_id, String);
+
+            let node = Check.nodeExists(userId, _id);
+            node = Check.nodePermissions(userId, _id, node);
+
+            console.log(node);
+
+            sinkRemove(_id);
         }
     }
 });

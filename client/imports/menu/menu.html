@@ -28,9 +28,15 @@
                 {{#if itemSelected}}
                     <li><a class="btn-floating orange lighten-2" id="splitChild"><i class="material-icons">call_split</i></a></li>
                     <li><a class="btn-floating orange lighten-2" id="done"><i class="material-icons">{{#if isDone}}close{{else}}check{{/if}}</i></a></li>
-                    <li><a class="btn-floating orange lighten-2" id="remove"><i class="material-icons">delete_forever</i></a></li>
+                    <li><a class="btn-floating orange lighten-2" id="remove"><i class="material-icons">delete</i></a></li>
+                    {{#unless root}}
+                        <li><a class="btn-floating teal accent-4" id="removeLevel"><i class="material-icons">delete_forever</i></a></li>
+                    {{/unless}}
                     <li><a class="btn-floating teal accent-4" id="add"><i class="material-icons">add</i></a></li>
                 {{else}}
+                    {{#unless root}}
+                        <li><a class="btn-floating teal accent-4" id="removeLevel"><i class="material-icons">delete_forever</i></a></li>
+                    {{/unless}}
                     <li><a class="btn-floating teal accent-4" id="add"><i class="material-icons">add</i></a></li>
                 {{/if}}
             </ul>
@@ -45,11 +51,11 @@
         <!--/FABS-->
 
         <!--BODY-->
-        <div class="collection">
+        <ul class="collection">
             {{#each item}}
                 {{>itemTemp}}
             {{/each}}
-        </div>
+        </ul>
         <!--/BODY-->
 
         <br>
@@ -57,5 +63,16 @@
 </template>
 
 <template name="itemTemp">
-    <a href="#" class="itemLink collection-item {{isActive}}">{{name}}<span class="badge">{{{numNotDone}}}</span></a>
+    <li class="itemLink collection-item avatar {{isActive}}">
+        <i class="material-icons circle {{doneStyling}}">{{doneIcon}}</i>
+        <span class="title">{{name}}</span>
+        {{#if noDescendants}}
+            <p>{{numCompleteText}}</p>
+        {{else}}
+            {{#if hasDate}}
+                <p>{{dateLimit}}</p>
+            {{/if}}
+        {{/if}}
+    </li>
+    <!--<a href="#" class="itemLink collection-item {{isActive}}">{{name}}<span class="badge">{{{numNotDone}}}</span></a>-->
 </template>

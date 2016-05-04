@@ -8,7 +8,6 @@ let state = null;
 let selectedState = null;
 
 let $tree = null;
-/*
 let inputHandler = function(event){
     event.preventDefault();
     switch(event.keyCode){
@@ -108,7 +107,7 @@ let addGroup = function(){
         });
         selectedState = $tree.tree('selectNode', $tree.tree('getNodeById', newId));
     }
-};*/
+};
 
 Template.desktop.onRendered(function(){
    // $(document).on('keydown', inputHandler);

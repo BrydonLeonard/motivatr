@@ -1,3 +1,6 @@
+import { Router } from 'meteor/iron:router';
+import { Accounts } from 'meteor/accounts-base';
+
 Router.configure({
     layoutTemplate:'defaultLayout'
 });
@@ -14,6 +17,9 @@ Router.route('/menu', function(){
         }
         require('./imports/menu/menu.js');
         this.next();
+    },
+    waitOn(){
+        Accounts.loginServicesConfigured();
     }
 });
 

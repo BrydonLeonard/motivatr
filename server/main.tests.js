@@ -40,7 +40,8 @@ let resetDB = function(user){
         name: 'l2done',
         done: true,
         parent: l1,
-        user
+        user,
+        children: []
     });
 
     let l2not = itemCollection.insert({
@@ -50,7 +51,8 @@ let resetDB = function(user){
         name: 'l2not',
         done: false,
         parent: l1,
-        user
+        user,
+        children: []
     });
 
     itemCollection.update(l1, {
@@ -193,6 +195,28 @@ describe('Meteor Methods', () => {
             expect(grandparent.completeDescendants).to.equal(3);
         });
 
+        it('can toggle a node (incomplete -> complete -> incomplete) where the parent follows the same toggle pattern', () => {
+            let toggleComplete = Meteor.server.method_handlers['toggleComplete'];
+            let invocation = { userId };
+
+            toggleComplete.apply(invocation, [l2not]);
+            toggleComplete.apply(invocation, [l2not]);
+
+            let thisItem = itemCollection.findOne(l2not);
+
+            expect(thisItem.done).to.equal(false);
+
+            let parent = itemCollection.findOne(l1);
+
+            expect(parent.descendants).to.equal(2);
+            expect(parent.completeDescendants).to.equal(1);
+
+            let grandparent = itemCollection.findOne(root);
+
+            expect(grandparent.descendants).to.equal(3);
+            expect(grandparent.completeDescendants).to.equal(1);
+        });
+
         it('can remove an incomplete node', () => {
             let removeNode = Meteor.server.method_handlers['removeNode'];
             let invocation = { userId };
@@ -223,6 +247,22 @@ describe('Meteor Methods', () => {
 
             expect(grandparent.descendants).to.equal(2);
             expect(grandparent.completeDescendants).to.equal(0);
+        });
+
+        it('can remove the children of a node', () => {
+            let removeChildren = Meteor.server.method_handlers['removeChildren'];
+            let invocation = { userId };
+
+            removeChildren.apply(invocation, [l1]);
+
+            let thisNode = itemCollection.findOne(l1);
+            let parent = itemCollection.findOne(root);
+
+            expect(thisNode.descendants).to.equal(0);
+            expect(thisNode.completeDescendants).to.equal(0);
+
+            expect(parent.descendants).to.equal(1);
+            expect(parent.completeDescendants).to.equal(0);
         });
     });
 
@@ -279,10 +319,10 @@ describe('Meteor Methods', () => {
             let invocation = { userId };
 
             let data = visTreeData.apply(invocation);
-            let expected = [{ data: { id: root, parent: null, name: 'root' }, classes: 'root' },
-             { data: { id: l1, name: 'l1', parent: root }, classes: '' },
-             { data: { id: l2done, name: 'l2done', parent: l1 }, classes: '' },
-             { data: { id: l2not, name: 'l2not', parent: l1 }, classes: '' },
+            let expected = [{ data: { id: root, name: 'root' }, scratch: { parent: null }, classes: 'root' },
+             { data: { id: l1, name: 'l1' }, scratch: { parent: root }, classes: '' },
+             { data: { id: l2done, name: 'l2done' }, scratch: { parent: l1 }, classes: '' },
+             { data: { id: l2not, name: 'l2not' }, scratch: { parent: l1 }, classes: '' },
              { data: { id: 'edgeId0', target: l1, source: root } },
              { data: { id: 'edgeId1', target: l2done, source: l1 } },
              { data: { id: 'edgeId2', target: l2not, source: l1 } }];

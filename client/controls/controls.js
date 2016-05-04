@@ -19,11 +19,28 @@ Template.sidenav.events({
         event.preventDefault();
         Router.go('/tree');
     },
+    'click [name="logout"]':function(event){
+        event.preventDefault();
+        $('.side-nav').sideNav('hide');
+        Meteor.logout();
+    }
+    /**
     'click [name="desktop"]':function(event){
         event.preventDefault();
         Router.go('/desktop');
-    }
+    },**/
 });
+
+Template.sidenav.helpers({
+    name: function(){
+        if (Meteor.user()) {
+            if (Meteor.user().profile.name){
+                return Meteor.user().profile.name;
+            }
+            return Meteor.user().username;
+        }
+    }
+})
 
 Template.blankLayout.onRendered(function(){
     $('body').css({'padding-left':0});

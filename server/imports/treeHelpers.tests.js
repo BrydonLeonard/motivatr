@@ -1,6 +1,6 @@
 import { expect } from 'meteor/practicalmeteor:chai';
 import { itemCollection } from './dbSetup';
-import { progress, bubbleComplete, bubbleRemove, bubbleAdd, addLeaf, removeLeaf } from './treeHelpers';
+import { progress, bubbleComplete, bubbleRemove, sinkRemove, bubbleAdd, addLeaf, removeLeaf } from './treeHelpers';
 
 describe('treeHelpers', () => {
     describe('helpers', () => {
@@ -43,7 +43,8 @@ describe('treeHelpers', () => {
                 completeDescendants: 0,
                 name: 'l21',
                 done: true,
-                parent: l1
+                parent: l1,
+                children: []
             });
 
             l2not = itemCollection.insert({
@@ -52,7 +53,8 @@ describe('treeHelpers', () => {
                 completeDescendants: 0,
                 name: 'l22',
                 done: false,
-                parent: l1
+                parent: l1,
+                children: []
             });
 
             itemCollection.update(l1, {
@@ -97,7 +99,7 @@ describe('treeHelpers', () => {
 
         //The 2 completion toggle methods need to be tested first.
         //The others in the module depend on them
-        it('can bubble toggle a task incomplete -> complete', () => {
+        it('can bubble toggle a task (incomplete -> complete)', () => {
             bubbleComplete(l2not, 1);
 
             let parent = itemCollection.findOne(l1);
@@ -110,7 +112,7 @@ describe('treeHelpers', () => {
             expect(grandparent.descendants).to.equal(3);
         });
 
-        it('can bubble toggle a task complete -> incomplete', () => {
+        it('can bubble toggle a task (complete -> incomplete)', () => {
             bubbleComplete(l2done, -1);
 
             let parent = itemCollection.findOne(l1);
@@ -120,6 +122,34 @@ describe('treeHelpers', () => {
             expect(parent.descendants).to.equal(2);
 
             expect(grandparent.completeDescendants).to.equal(0);
+            expect(grandparent.descendants).to.equal(3);
+        });
+
+        it('can bubble toggle a task (complete -> incomplete -> complete) where the parent is incomplete', () => {
+            bubbleComplete(l2done, -1);
+            bubbleComplete(l2done, 1);
+
+            let parent = itemCollection.findOne(l1);
+            let grandparent = itemCollection.findOne(root);
+
+            expect(parent.completeDescendants).to.equal(1);
+            expect(parent.descendants).to.equal(2);
+
+            expect(grandparent.completeDescendants).to.equal(1);
+            expect(grandparent.descendants).to.equal(3);
+        });
+
+        it('can bubble toggle a task (incomplete -> complete -> incomplete) where the parent follows the same toggle pattern', () => {
+            bubbleComplete(l2not, 1);
+            bubbleComplete(l2not, -1);
+
+            let parent = itemCollection.findOne(l1);
+            let grandparent = itemCollection.findOne(root);
+
+            expect(parent.completeDescendants).to.equal(1);
+            expect(parent.descendants).to.equal(2);
+
+            expect(grandparent.completeDescendants).to.equal(1);
             expect(grandparent.descendants).to.equal(3);
         });
         
@@ -167,6 +197,35 @@ describe('treeHelpers', () => {
 
             expect(grandparent.completeDescendants).to.equal(0);
             expect(grandparent.descendants).to.equal(2);
+        });
+
+        it('can sink remove children of a node with children', () => {
+            sinkRemove(l1);
+
+            let thisNode = itemCollection.findOne(l1);
+            let parent = itemCollection.findOne(root);
+
+            console.log(thisNode);
+            console.log(parent);
+
+            expect(thisNode.descendants).to.equal(0);
+            expect(thisNode.completeDescendants).to.equal(0);
+
+            expect(parent.descendants).to.equal(1);
+            expect(parent.completeDescendants).to.equal(0);
+        });
+
+        it('can run sink remove on a node with no children', () => {
+            sinkRemove(l2done);
+
+            let parent = itemCollection.findOne(l1);
+            let grandparent = itemCollection.findOne(root);
+
+            expect(parent.descendants).to.equal(2);
+            expect(parent.completeDescendants).to.equal(1);
+
+            expect(grandparent.descendants).to.equal(3);
+            expect(grandparent.completeDescendants).to.equal(1);
         });
 
         it('can remove all children from a node', () => {

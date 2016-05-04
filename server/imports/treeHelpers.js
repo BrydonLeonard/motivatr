@@ -25,6 +25,7 @@ let progress = function(_id) {
  */
 let bubbleComplete = function(_id, change){
     let node = itemCollection.findOne(_id);
+
     if (node && node.parent){
         itemCollection.update(node.parent, {
             $inc: {
@@ -32,6 +33,11 @@ let bubbleComplete = function(_id, change){
             }
         });
         let parent = itemCollection.findOne(node.parent);
+
+        // If the parent was complete, this increases the number of lost completeDescendants
+        if ((parent.completeDescendants - change) == parent.descendants){
+            change += (change / Math.abs(change));
+        }
 
         // If the parent has become completed, this adds 1 to the number of completed nodes
         if ((parent.completeDescendants) === parent.descendants){
@@ -80,6 +86,35 @@ let bubbleRemove = function(_id, complete){
 };
 
 /**
+ * Physically removes all descendants of a given node, but not the node itself
+ * Will bubble changes before removing the nodes
+ * <b>Must</b> be called before the node is removed from the tree
+ * @param _id The id of the ancestor node whose descendants should be removed
+ */
+let sinkRemove = function(_id){
+    let thisNode = itemCollection.findOne(_id);
+
+    for (let childId of thisNode.children) {
+        let child = itemCollection.findOne(childId);
+        sinkRemove(childId);
+
+        //Check whether the child is done
+        let childIsDone = false;
+        if ((child.descendants == child.completeDescendants && child.descendants != 0) || (child.done)){
+            childIsDone = true;
+        }
+
+        bubbleRemove(childId, childIsDone);
+        itemCollection.remove(childId);
+    }
+    itemCollection.update(_id, {
+        $set: {
+            children: []
+        }
+    });
+}
+
+/**
  * Helper function to update descendant counters, after a child is added
  * @param _id The id of the child
  */
@@ -118,9 +153,10 @@ let removeLeaf = function(_id){
  * @param parentId The ID of the parent of the new node, or null to add a root node
  * @param name The name of the new node
  * @param user The user that owns the node
+ * @param date The due date of the item. Will be stored exactly as provided
  * @returns {String} The id of the new node
  */
-let addLeaf = function(parentId, name, user){
+let addLeaf = function(parentId, name, user, date){
     //Allows this method to create root nodes as well
     //Checks permissions while acquiring the node
     let parent = parentId ? itemCollection.findOne(parentId) : null;
@@ -136,7 +172,8 @@ let addLeaf = function(parentId, name, user){
         name,
         done: false,
         parent: parentId,
-        user
+        user,
+        date
     });
 
     //Update the parent with the new child
@@ -149,4 +186,5 @@ let addLeaf = function(parentId, name, user){
     });
     return _id;
 };
-export { progress, bubbleComplete, bubbleRemove, bubbleAdd, addLeaf, removeLeaf };
+
+export { progress, bubbleComplete, bubbleRemove, sinkRemove, bubbleAdd, addLeaf, removeLeaf };

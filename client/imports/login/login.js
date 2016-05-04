@@ -1,6 +1,13 @@
 import './login.html';
+import { Materialize } from 'meteor/materialize:materialize';
+import { Router } from 'meteor/iron:router';
+import * as loginErrors from './loginErrors';
 
 Template.login.events({
+    /**
+     * Click login on the login form
+     * @param event
+     */
     'submit #loginForm':function(event){
         event.preventDefault();
 
@@ -11,8 +18,23 @@ Template.login.events({
             if (!error){
                 Router.go('menu');
             } else {
-                Materialize.toast('Login failed', 4000);
+                loginErrors.unknownError();
             }
         })
+    },
+    /**
+     * Click the facebook button on the login screen
+     * @param event
+     */
+    'click #facebookLogin':function(event){
+        event.preventDefault();
+        Meteor.loginWithFacebook({}, function(e){
+            if (e){
+                loginErrors.unknownError();
+            } else {
+                console.log(Session);
+                Router.go('menu');
+            }
+        });
     }
 });

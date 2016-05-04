@@ -3,15 +3,22 @@ import { ReactiveVar } from 'meteor/reactive-var';
 import { itemCollection } from '../dbSetup';
 import { Session } from 'meteor/session';
 import { Meteor } from 'meteor/meteor';
+import * as newItemModal from '../modals/newItemModal';
+import * as confirmModal from '../modals/confirmModal';
 import './menu.html';
+import moment from '../external/moment';
 
 let breadcrumbDep = new Tracker.Dependency;
 let breadcrumbs = [{name:'home', key:'root', num:0}];
+
+ic = itemCollection;
 
 Template.todoContainer.onCreated(function(){
     Session.set('activeItem', null);
     Session.set('selectedItem', null);
     Meteor.subscribe('itemCollection');
+    newItemModal.addToTemplate($('body')[0]);
+    confirmModal.addToTemplate($('body')[0]);
 });
 
 Template.todoContainer.events({
@@ -21,11 +28,12 @@ Template.todoContainer.events({
      */
     'click #add':function(event){
         event.preventDefault();
-        let name = prompt('Event name');
-        if (name){
-            let activeId = Session.get('activeItem') ? Session.get('activeItem') : null;
-            Meteor.call('addChild', activeId, name);
-        }
+        let activeId = Session.get('activeItem') ? Session.get('activeItem') : null;
+        newItemModal.displayModal(activeId, function(e){
+            if (e){
+                Materialize.toast('Something went wrong');
+            }
+        });
     },
     /**
      * Back button is clicked
@@ -62,29 +70,42 @@ Template.todoContainer.events({
      */
     'click #remove':function(event){
         event.preventDefault();
-        if (confirm('Are you sure?')){
-            Meteor.call('removeNode', Session.get('selectedItem'));
-            Session.set('selectedItem', null);
+        confirmModal.displayModal('Are you you wish to delete the item?', function(result){
+            if (result){
+                Meteor.call('removeNode', Session.get('selectedItem'));
+                Session.set('selectedItem', null);
 
-            let thisNode = itemCollection.findOne(Session.get('activeItem'));
-            closeFab();
+                let thisNode = itemCollection.findOne(Session.get('activeItem'));
+                closeFab();
 
-            if (thisNode && thisNode.children.length - 1 === 0){
-                goBack();
+                if (thisNode && thisNode.children.length - 1 === 0){
+                    goBack();
+                }
             }
-        }
+        });
+    },
+    'click #removeLevel':function(event){
+        event.preventDefault();
+        confirmModal.displayModal('Are you sure you want to delete the current item and all of it\'s descendants?', function(result){
+            if (result){
+                //Meteor.call('removeChildren', Session.get('activeItem'));
+                //Session.set('selectedItem', null);
+                console.log(Session.get('activeItem'));
+                //goBack();
+            }
+        })
     },
     'click #splitChild':function(event){
         event.preventDefault();
-        let name = prompt('Enter subtask name');
-        if (name){
-            Meteor.call('addChild', Session.get('selectedItem'), name, function(e, _id){
+        newItemModal.displayModal(Session.get('selectedItem'), function(e){
+            if (e){
+                Materialize.toast("Something went wrong");
+            } else {
                 let moveTo = itemCollection.findOne(Session.get('selectedItem'));
                 goToChild(moveTo._id, moveTo.name);
                 closeFab();
-            });
-
-        }
+            }
+        });
     }
 });
 
@@ -173,13 +194,31 @@ Template.itemTemp.helpers({
      * Gets the number of incomplete descendants of an item
      * @returns {string}
      */
-    'numNotDone':function(){
+    'doneIcon':function(){
         if (this.descendants > 0) {
-            let num = this.descendants - this.completeDescendants;
-            return num > 0 ? num + ' left' : '<i class="material-icons">done</i>';
+            return (this.descendants == this.completeDescendants) ? 'done_all' : 'group_work';
         }else{
-            return this.done ? '<i class="material-icons">done</i>' : '<i class="material-icons">clear</i>';
+            return this.done ?  'done' : 'clear';
         }
+    },
+    'doneStyling':function(){
+        if (this.descendants > 0) {
+            return (this.descendants == this.completeDescendants) ? 'teal lighten-2' : 'red lighten-2';
+        }else{
+            return this.done ?  'teal lighten-2' : 'red lighten-2';
+        }
+    },
+    noDescendants:function(){
+        return this.descendants > 0;
+    },
+    numCompleteText:function(){
+        return (this.descendants - this.completeDescendants) + ' remaining';
+    },
+    hasDate:function(){
+        return !!this.date;
+    },
+    dateLimit:function(){
+        return moment(this.date).format('DD MMMM YYYY');
     },
     'isActive':function(){
         return (this._id == Session.get('selectedItem')) ? ' active' : '';
@@ -197,14 +236,10 @@ Template.itemTemp.events({
             goToChild(this._id, this.name);
             closeFab();
         } else {
-            if (Session.get('selectedItem') === this._id){
-                Meteor.call('toggleComplete', Session.get('selectedItem'));
-            } else {
-                Session.set('selectedItem', this._id);
-                Tracker.afterFlush(function () {
-                    openFab();
-                });
-            }
+            Session.set('selectedItem', this._id);
+            Tracker.afterFlush(function () {
+                openFab();
+            });
         }
     }
 });
@@ -290,6 +325,9 @@ let openFab = function(){
     $('#controls-fab').openFAB();
 };
 
+/**
+ * Close the fab controls
+ */
 let closeFab = function(){
     $('#controls-fab').closeFAB();
 };

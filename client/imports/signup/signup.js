@@ -2,10 +2,10 @@ import { Tracker } from 'meteor/tracker';
 import { Materialize } from 'meteor/materialize:materialize'
 import './signup.html';
 
-
-let invalidPass = new Tracker.Dependency;
-
 Template.signup.events({
+    /**
+     * When either password field is changed
+     */
     'keyup #password1, keyup #password2'(){
         if ($('#password1').val() != $('#password2').val()){
             $('#password1').addClass('nomatch');
@@ -17,6 +17,10 @@ Template.signup.events({
             console.log('2');
         }
     },
+    /**
+     * Submit the signup form
+     * @param event
+     */
     'submit #signupForm'(event){
         event.preventDefault();
 
