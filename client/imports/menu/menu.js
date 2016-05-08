@@ -62,7 +62,6 @@ Template.todoContainer.events({
     'click #done':function(event){
         event.preventDefault();
         Meteor.call('toggleComplete', Session.get('selectedItem'));
-        closeFab();
     },
     /**
      * Remove item button is clicked
@@ -88,10 +87,10 @@ Template.todoContainer.events({
         event.preventDefault();
         confirmModal.displayModal('Are you sure you want to delete the current item and all of it\'s descendants?', function(result){
             if (result){
-                //Meteor.call('removeChildren', Session.get('activeItem'));
-                //Session.set('selectedItem', null);
-                console.log(Session.get('activeItem'));
-                //goBack();
+                Meteor.call('removeChildren', Session.get('activeItem'), function(){
+                    Session.set('selectedItem', null);
+                    goBack();
+                });
             }
         })
     },
@@ -208,8 +207,8 @@ Template.itemTemp.helpers({
             return this.done ?  'teal lighten-2' : 'red lighten-2';
         }
     },
-    noDescendants:function(){
-        return this.descendants > 0;
+    hasIncompDescendants:function(){
+        return (this.descendants > this.completeDescendants);
     },
     numCompleteText:function(){
         return (this.descendants - this.completeDescendants) + ' remaining';
@@ -236,6 +235,11 @@ Template.itemTemp.events({
             goToChild(this._id, this.name);
             closeFab();
         } else {
+            if (Session.get('selectedItem') == null){
+                if ($('#controls-fab').hasClass('active')){
+                    closeFab();
+                }
+            }
             Session.set('selectedItem', this._id);
             Tracker.afterFlush(function () {
                 openFab();

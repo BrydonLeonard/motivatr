@@ -156,7 +156,7 @@ let removeLeaf = function(_id){
  * @param date The due date of the item. Will be stored exactly as provided
  * @returns {String} The id of the new node
  */
-let addLeaf = function(parentId, name, user, date){
+let addLeaf = function(parentId, name, user, date, priority){
     //Allows this method to create root nodes as well
     //Checks permissions while acquiring the node
     let parent = parentId ? itemCollection.findOne(parentId) : null;
@@ -173,7 +173,8 @@ let addLeaf = function(parentId, name, user, date){
         done: false,
         parent: parentId,
         user,
-        date
+        date,
+        priority
     });
 
     //Update the parent with the new child

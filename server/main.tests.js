@@ -92,7 +92,7 @@ describe('Meteor Methods', () => {
             let addChild = Meteor.server.method_handlers['addChild'];
             let invocation = { userId };
 
-            let _id = addChild.apply(invocation, [l1, 'newNode']);
+            let _id = addChild.apply(invocation, [l1, 'newNode', null, 0]);
 
             let thisItem = itemCollection.findOne({name: 'newNode'});
             expect(thisItem).to.exist;
@@ -114,7 +114,7 @@ describe('Meteor Methods', () => {
             let addChild = Meteor.server.method_handlers['addChild'];
             let invocation = { userId };
 
-            let _id = addChild.apply(invocation, [l2done, 'newNode']);
+            let _id = addChild.apply(invocation, [l2done, 'newNode', null, 0]);
 
             let thisItem = itemCollection.findOne({name: 'newNode'});
             expect(thisItem).to.exist;
@@ -139,7 +139,7 @@ describe('Meteor Methods', () => {
             let addChild = Meteor.server.method_handlers['addChild'];
             let invocation = { userId };
 
-            let _id = addChild.apply(invocation, [null, 'newNode']);
+            let _id = addChild.apply(invocation, [null, 'newNode', null, 0 ]);
 
             let thisItem = itemCollection.findOne({name: 'newNode'});
             expect(thisItem).to.exist;

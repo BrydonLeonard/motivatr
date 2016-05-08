@@ -109,7 +109,7 @@ Meteor.methods({
      * @param date The due date of the new item (Optional)
      * @return The new id
      */
-    addChild: function(parentId, name, date){
+    addChild: function(parentId, name, date, priority){
         let userId = this.userId;
 
         let _id;
@@ -117,6 +117,8 @@ Meteor.methods({
         if (userId){
             check(parentId, Match.OneOf(String, null));
             check(name, String);
+            check(priority, Number);
+            check((priority >= 0 && priority < 6), true);
 
             let formattedDate = (date != null) ? moment(date, 'DD MMMM, YYYY') : null;
 
@@ -128,6 +130,8 @@ Meteor.methods({
                 Check.nodePermissions(userId, parentId);
             }
 
+
+
             let parent = itemCollection.findOne(parentId);
             if (parent && parent.done){
                 itemCollection.update(parentId, {
@@ -138,7 +142,7 @@ Meteor.methods({
                 bubbleComplete(parentId, -1);
             }
 
-            _id = addLeaf(parentId, name, userId, (formattedDate != null) ? formattedDate.toDate() : null);
+            _id = addLeaf(parentId, name, userId, (formattedDate != null) ? formattedDate.toDate() : null, priority);
             bubbleAdd(_id);
         } else {
             Errors.noLoginError();

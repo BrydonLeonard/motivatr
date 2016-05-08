@@ -17,6 +17,20 @@
                         <label for="dateLimit">Date limit</label>
                     </div>
                 {{/if}}
+                <p>
+                    <input type="checkbox" id="hasPriority">
+                    <label for="hasPriority">Has a priority level</label>
+                </p>
+                {{#if hasPriority}}
+                    <div class="input-field">
+                        <select class="icons">
+                            {{#each options}}
+                                <option value="{{value}}"><i class="material-icons circle {{colour}}"></i>{{text}}sdgsdgsdgdg</option>
+                            {{/each}}
+                        </select>
+                        <label>Priority level</label>
+                    </div>
+                {{/if}}
                 <button class="waves-effect waves-light btn spread-button">add item</button>
             </form>
         </div>

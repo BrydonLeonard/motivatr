@@ -101,6 +101,11 @@ body, html{
     cursor: pointer;
 }
 
+/*Allow for smaller items in menu view */
+.collection-item.avatar{
+    min-height: 65px !important;
+}
+
 
 /* Working on these */
 

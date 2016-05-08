@@ -29,12 +29,12 @@
                     <li><a class="btn-floating orange lighten-2" id="splitChild"><i class="material-icons">call_split</i></a></li>
                     <li><a class="btn-floating orange lighten-2" id="done"><i class="material-icons">{{#if isDone}}close{{else}}check{{/if}}</i></a></li>
                     <li><a class="btn-floating orange lighten-2" id="remove"><i class="material-icons">delete</i></a></li>
-                    {{#unless root}}
+                    {{#unless true}}
                         <li><a class="btn-floating teal accent-4" id="removeLevel"><i class="material-icons">delete_forever</i></a></li>
                     {{/unless}}
                     <li><a class="btn-floating teal accent-4" id="add"><i class="material-icons">add</i></a></li>
                 {{else}}
-                    {{#unless root}}
+                    {{#unless true}}
                         <li><a class="btn-floating teal accent-4" id="removeLevel"><i class="material-icons">delete_forever</i></a></li>
                     {{/unless}}
                     <li><a class="btn-floating teal accent-4" id="add"><i class="material-icons">add</i></a></li>
@@ -66,7 +66,7 @@
     <li class="itemLink collection-item avatar {{isActive}}">
         <i class="material-icons circle {{doneStyling}}">{{doneIcon}}</i>
         <span class="title">{{name}}</span>
-        {{#if noDescendants}}
+        {{#if hasIncompDescendants}}
             <p>{{numCompleteText}}</p>
         {{else}}
             {{#if hasDate}}

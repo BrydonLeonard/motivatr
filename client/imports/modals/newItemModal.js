@@ -32,7 +32,12 @@ Template.newItemModal.events({
             date = null;
         }
 
-        Meteor.call('addChild', data.parent, event.target.itemName.value, date, function(e){
+        let priority = 0;
+       if ($('#hasPriority')[0].checked){
+            priority = $('#priorityLevel').val();
+        }
+
+        Meteor.call('addChild', data.parent, event.target.itemName.value, date, priority, function(e){
             if (data.callback) {
                 data.callback(e);
                 $('#newItemModal').closeModal();
@@ -44,6 +49,9 @@ Template.newItemModal.events({
      * Triggers the checkBoxDep to update the datepicker
      */
     'change #hasDate':function(){
+        checkBoxDep.changed();
+    },
+    'change #hasPriority':function(){
         checkBoxDep.changed();
     }
 });
@@ -67,6 +75,23 @@ Template.newItemModal.helpers({
             });
         }
         return value;
+    },
+    hasPriority: function(){
+        checkBoxDep.depend();
+        let value = $('#hasPriority')[0] ? $('#hasPriority')[0].checked : false;
+        if (value){
+            Tracker.afterFlush(function(){
+                $('select').material_select();
+            });
+        }
+        return value;
+    },
+    options: function(){
+        return [
+            { value:1, colour: 'blue', text: 'Low priority'},
+            { value:2, colour: 'green', text: 'Medium priority'},
+            { value:3, colour: 'red', text: 'High priority'}
+        ]
     }
 });
 
@@ -80,6 +105,7 @@ Template.newItemModal.helpers({
 let displayModal = function(parent, callback){
     $('#newItemModal').openModal();
     $('#hasDate').attr('checked', false);
+    $('#hasPriority').attr('checked', false);
     checkBoxDep.changed();
     $('#itemName').val('');
     $('#itemName').focus();
