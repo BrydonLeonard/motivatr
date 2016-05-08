@@ -22,15 +22,20 @@
                     <label for="hasPriority">Has a priority level</label>
                 </p>
                 {{#if hasPriority}}
-                    <div class="input-field">
-                        <select class="icons">
-                            {{#each options}}
-                                <option value="{{value}}"><i class="material-icons circle {{colour}}"></i>{{text}}sdgsdgsdgdg</option>
-                            {{/each}}
-                        </select>
-                        <label>Priority level</label>
-                    </div>
+                    <p class="range-field newItemModalSlider">
+                        <input name="priority" type="range" id="priority" min="0" max="3" default="0">
+                    </p>
                 {{/if}}
+                <p>
+                    <input type="checkbox" id="hasDuplicates">
+                    <label for="hasDuplicates">Add multiple?</label>
+                </p>
+                {{#if hasDuplicates}}
+                    <p class="range-field newItemModalSlider">
+                        <input name="priority" type="range" id="duplicates" min="1" max="10" default="0">
+                    </p>
+                {{/if}}
+
                 <button class="waves-effect waves-light btn spread-button">add item</button>
             </form>
         </div>

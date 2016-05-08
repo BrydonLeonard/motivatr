@@ -221,6 +221,25 @@ Template.itemTemp.helpers({
     },
     'isActive':function(){
         return (this._id == Session.get('selectedItem')) ? ' active' : '';
+    },
+    'hasHighPriority':function(){
+        return (this.priority && this.priority > 0);
+    },
+    'priorityColor':function(){
+        switch(this.priority){
+            case 1: return 'blue-text text-lighten-2';
+            case 2: return 'orange-text text-lighten-2';
+            case 3: return 'red-text text-lighten-2';
+            default: return 'teal-text text-lighten-2';
+        }
+    },
+    'sentiment':function(){
+        switch(this.priority){
+            case 1: return 'sentiment_satisfied';
+            case 2: return 'sentiment_neutral';
+            case 3: return 'sentiment_dissatisfied';
+            default: return 'sentiment_neutral';
+        }
     }
 });
 

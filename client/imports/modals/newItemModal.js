@@ -33,16 +33,27 @@ Template.newItemModal.events({
         }
 
         let priority = 0;
-       if ($('#hasPriority')[0].checked){
-            priority = $('#priorityLevel').val();
+        if ($('#hasPriority')[0].checked){
+            priority = Number($('#priority').val());
+            console.log($('#priority').val());
         }
 
-        Meteor.call('addChild', data.parent, event.target.itemName.value, date, priority, function(e){
-            if (data.callback) {
-                data.callback(e);
-                $('#newItemModal').closeModal();
-            }
-        });
+        if ($('#hasDuplicates')[0].checked){
+            let duplicates = $('#duplicates').val();
+            Meteor.call('addMultiple', data.parent, event.target.itemName.value, date, priority, duplicates, function(e){
+                if (data.callback){
+                    data.callback(e);
+                    $('#newItemModal').closeModal();
+                }
+            });
+        } else {
+            Meteor.call('addChild', data.parent, event.target.itemName.value, date, priority, function (e) {
+                if (data.callback) {
+                    data.callback(e);
+                    $('#newItemModal').closeModal();
+                }
+            });
+        }
 
     },
     /**
@@ -52,6 +63,9 @@ Template.newItemModal.events({
         checkBoxDep.changed();
     },
     'change #hasPriority':function(){
+        checkBoxDep.changed();
+    },
+    'change #hasDuplicates':function(){
         checkBoxDep.changed();
     }
 });
@@ -79,11 +93,11 @@ Template.newItemModal.helpers({
     hasPriority: function(){
         checkBoxDep.depend();
         let value = $('#hasPriority')[0] ? $('#hasPriority')[0].checked : false;
-        if (value){
-            Tracker.afterFlush(function(){
-                $('select').material_select();
-            });
-        }
+        return value;
+    },
+    hasDuplicates:function(){
+        checkBoxDep.depend();
+        let value = $('#hasDuplicates')[0] ? $('#hasDuplicates')[0].checked : false;
         return value;
     },
     options: function(){
@@ -105,7 +119,6 @@ Template.newItemModal.helpers({
 let displayModal = function(parent, callback){
     $('#newItemModal').openModal();
     $('#hasDate').attr('checked', false);
-    $('#hasPriority').attr('checked', false);
     checkBoxDep.changed();
     $('#itemName').val('');
     $('#itemName').focus();

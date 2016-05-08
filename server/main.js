@@ -106,7 +106,8 @@ Meteor.methods({
      * Adds a child node to the given parent
      * @param parentId The parent ID
      * @param name The child node's name
-     * @param date The due date of the new item (Optional)
+     * @param date The due date of the new item (Optional or null)
+     * @param priority The priority of the new child
      * @return The new id
      */
     addChild: function(parentId, name, date, priority){
@@ -117,6 +118,7 @@ Meteor.methods({
         if (userId){
             check(parentId, Match.OneOf(String, null));
             check(name, String);
+
             check(priority, Number);
             check((priority >= 0 && priority < 6), true);
 
@@ -149,6 +151,19 @@ Meteor.methods({
         }
 
         return _id;
+    },
+    /**
+     * Adds [number] new children, with the same name, suffixed by (index)
+     * @param parentId The parent ID
+     * @param name The child node's name
+     * @param date The due date of the new item (Optional or null)
+     * @param priority The priority of the new item
+     * @param number The number of new items to add
+     */
+    addMultiple: function(parentId, name, date, priority, number){
+        for (let i = 0; i < number; i++){
+            Meteor.call('addChild', parentId, name + ' (' + String(i + 1) + ')', date, priority, number);
+        }
     },
     /**
      * Toggles an item between complete and incomplete.

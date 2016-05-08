@@ -73,6 +73,10 @@
                 <p>{{dateLimit}}</p>
             {{/if}}
         {{/if}}
+    <!-- "High" priority just means greater than 0-->
+        {{#if hasHighPriority}}
+            <i class="material-icons secondary-content {{priorityColor}}">{{sentiment}}</i>
+        {{/if}}
     </li>
     <!--<a href="#" class="itemLink collection-item {{isActive}}">{{name}}<span class="badge">{{{numNotDone}}}</span></a>-->
 </template>

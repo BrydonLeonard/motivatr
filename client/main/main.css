@@ -106,6 +106,12 @@ body, html{
     min-height: 65px !important;
 }
 
+/*NewItemModal needs some space around the slider*/
+.newItemModalSlider{
+    margin-top:20px;
+    margin-bottom:20px;
+}
+
 
 /* Working on these */
 
