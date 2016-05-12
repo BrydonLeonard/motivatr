@@ -9,11 +9,12 @@ import './menu.html';
 import moment from '../external/moment';
 
 let breadcrumbDep = new Tracker.Dependency;
-let breadcrumbs = [{name:'home', key:'root', num:0}];
+let breadcrumbs;
 
 ic = itemCollection;
 
 Template.todoContainer.onCreated(function(){
+    breadcrumbs = [{name:'home', key:'root', num:0}];
     Session.set('activeItem', null);
     Session.set('selectedItem', null);
     Meteor.subscribe('itemCollection');

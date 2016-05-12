@@ -4,6 +4,9 @@ import { Mongo } from 'meteor/mongo';
 import { $ } from 'meteor/jquery';
 //import  { cytoscape } from 'cytoscape'; // Until the failed to parse sourcemap bug is fixed, we load this ourselves
 let cytoscape = require('./cytoscape.js');
+let cydagre = require('cytoscape-dagre');
+let dagre = require('./dagre');
+let cyCose = require('./cytoscape-cose-bilkent');
 import './tree.html';
 
 
@@ -12,6 +15,8 @@ import './tree.html';
  */
 Template.treeContainer.onRendered(function(){
     Meteor.call('visTreeData', function(e, elements) {
+        cydagre(cytoscape, dagre);
+
         let cy = cytoscape({
             container: $('#chart_div'),
             elements: elements,
@@ -19,7 +24,7 @@ Template.treeContainer.onRendered(function(){
                 {
                     selector: 'node',
                     style: {
-                        'background-color': '#26a69a',
+                        'background-color': '#E57373',
                         'label': 'data(name)',
                         'width': 'label',
                         'height': 'label',
@@ -52,6 +57,12 @@ Template.treeContainer.onRendered(function(){
                     }
                 },
                 {
+                    selector: '.complete',
+                    style: {
+                        'background-color': '#26a69a'
+                    }
+                },
+                {
                     selector: 'edge',
                     style: {
                         'width': 3,
@@ -68,12 +79,17 @@ Template.treeContainer.onRendered(function(){
             ],
 
             layout: {
-                name: 'cose',
+                name: 'dagre',
+                rankDir: 'LR',
+                nodeSep: 10,
+                rankSep: 20,
+                padding:25,
+                fit: false/*
                 'edgeElasticity': function (edge) {
                     if (edge.source().id() == 'root')
                         return 300;
                     return 100;
-                }
+                }*/
             }
         });
 

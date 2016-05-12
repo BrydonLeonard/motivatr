@@ -3,12 +3,17 @@ import * as Check from './check';
 
 /**
  * Helper function to find the percentage that a given item is complete
+ * Will return 1 or 0 for a leaf node
  * @param _id The id of the item to check
  */
 let progress = function(_id) {
     let node = itemCollection.findOne(_id);
     if (node) {
-        return node.completeDescendants / node.descendants;
+        if (node.descendants > 0) {
+            return node.completeDescendants / node.descendants;
+        } else if (node.done){
+            return 1;
+        }
     }
     return 0;
 };
