@@ -32,7 +32,6 @@ Template.login.events({
             if (e){
                 loginErrors.unknownError();
             } else {
-                console.log(Session);
                 Router.go('menu');
             }
         });

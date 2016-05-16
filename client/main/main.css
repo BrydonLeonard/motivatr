@@ -25,6 +25,11 @@ header, main, footer, body {
     padding-left: 240px;
 }
 
+/* For the login screen */
+.no-left-padding{
+    padding-left: 0;
+}
+
 /* Also for the sidenav */
 @media only screen and (max-width : 992px) {
     header, main, footer, body {

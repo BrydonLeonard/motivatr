@@ -3,15 +3,30 @@ import { ReactiveVar } from 'meteor/reactive-var';
 import { itemCollection } from '../dbSetup';
 import { Session } from 'meteor/session';
 import { Meteor } from 'meteor/meteor';
+
+//Modals
 import * as newItemModal from '../modals/newItemModal';
 import * as confirmModal from '../modals/confirmModal';
+
+//Template
 import './menu.html';
+
+//For time processing
 import moment from '../external/moment';
+
+//For nice animations
+import { initAnimations } from '../external/animate';
+import '../external/animate';
+import Bounce from 'bounce.js';
 
 let breadcrumbDep = new Tracker.Dependency;
 let breadcrumbs;
 
+let bounce;
+let bounceSpin;
+
 ic = itemCollection;
+
 
 Template.todoContainer.onCreated(function(){
     breadcrumbs = [{name:'home', key:'root', num:0}];
@@ -20,6 +35,27 @@ Template.todoContainer.onCreated(function(){
     Meteor.subscribe('itemCollection');
     newItemModal.addToTemplate($('body')[0]);
     confirmModal.addToTemplate($('body')[0]);
+    initAnimations();
+    bounce = new Bounce();
+    bounce.scale({
+        from: { x: 1.2, y: 1.2 },
+        to: { x: 1, y: 1 },
+        stiffness: 1
+    });
+    bounceSpin = new Bounce();
+    bounceSpin.scale({
+        from: { x: 1.2, y: 1.2 },
+        to: { x: 1, y: 1 },
+        stiffness: 1
+    }).rotate({
+        from: 0,
+        to: 360,
+        duration:1300
+    });
+
+    window.onpopstate = function(event){
+        goBack();
+    };
 });
 
 Template.todoContainer.events({
@@ -27,7 +63,7 @@ Template.todoContainer.events({
      * Add child button is clicked
      * @param event
      */
-    'click #add':function(event){
+    'click .add':function(event){
         event.preventDefault();
         let activeId = Session.get('activeItem') ? Session.get('activeItem') : null;
         newItemModal.displayModal(activeId, function(e){
@@ -35,14 +71,6 @@ Template.todoContainer.events({
                 Materialize.toast('Something went wrong');
             }
         });
-    },
-    /**
-     * Back button is clicked
-     * @param event
-     */
-    'click #back':function(event){
-        event.preventDefault();
-        goBack();
     },
     /**
      * A breadcrumb is clicked
@@ -70,30 +98,34 @@ Template.todoContainer.events({
      */
     'click #remove':function(event){
         event.preventDefault();
-        confirmModal.displayModal('Are you you wish to delete the item?', function(result){
-            if (result){
-                Meteor.call('removeNode', Session.get('selectedItem'));
-                Session.set('selectedItem', null);
 
-                let thisNode = itemCollection.findOne(Session.get('activeItem'));
-                closeFab();
-
-                if (thisNode && thisNode.children.length - 1 === 0){
-                    goBack();
-                }
-            }
-        });
-    },
-    'click #removeLevel':function(event){
-        event.preventDefault();
-        confirmModal.displayModal('Are you sure you want to delete the current item and all of it\'s descendants?', function(result){
-            if (result){
-                Meteor.call('removeChildren', Session.get('activeItem'), function(){
+        if (selectedHasChildren()){
+            confirmModal.displayModal('Are you sure you wish to delete this item and all of its children?', function(result){
+                if (result){
+                    Meteor.call('removeChildren', Session.get('selectedItem'));
+                    Meteor.call('removeNode', Session.get('selectedItem'));
                     Session.set('selectedItem', null);
-                    goBack();
-                });
-            }
-        })
+
+                    closeFab();
+                }
+            });
+        } else {
+            confirmModal.displayModal('Are you you wish to delete the item?', function(result){
+                if (result){
+                    Meteor.call('removeNode', Session.get('selectedItem'));
+                    Session.set('selectedItem', null);
+
+                    let thisNode = itemCollection.findOne(Session.get('activeItem'));
+                    closeFab();
+
+                    if (thisNode && thisNode.children.length - 1 === 0){
+                        goBack();
+                    }
+                }
+            });
+        }
+
+
     },
     'click #splitChild':function(event){
         event.preventDefault();
@@ -104,8 +136,44 @@ Template.todoContainer.events({
                 let moveTo = itemCollection.findOne(Session.get('selectedItem'));
                 goToChild(moveTo._id, moveTo.name);
                 closeFab();
+                Tracker.afterFlush(function(){
+                    bounceSpinFab();
+                });
             }
         });
+    },
+    'click #openChild':function(event){
+        event.preventDefault();
+        let thisItem = itemCollection.findOne(Session.get('selectedItem'));
+        if (thisItem) {
+            goToChild(Session.get('selectedItem'), thisItem.name);
+            closeFab();
+            Tracker.afterFlush(function(){
+                bounceSpinFab();
+            });
+        }
+    },
+    'click #increaseReps':function(event){
+        event.preventDefault();
+        let thisItem = itemCollection.findOne(Session.get('selectedItem'));
+        if (thisItem){
+            if (thisItem.repeatableLimit){
+                if (thisItem.repeated < thisItem.repeatableLimit){
+                    Meteor.call('increaseReps', thisItem._id);
+                }
+            } else {
+                Meteor.call('increaseReps', thisItem._id);
+            }
+        }
+    },
+    'click #decreaseReps':function(event){
+        event.preventDefault();
+        let thisItem = itemCollection.findOne(Session.get('selectedItem'));
+        if (thisItem){
+            if (thisItem.repeated > 0){
+                Meteor.call('decreaseReps', thisItem._id);
+            }
+        }
     }
 });
 
@@ -162,7 +230,30 @@ Template.todoContainer.helpers({
         }
         return false;
     },
-    'isDone':function(){
+    /**
+     * Returns true if the currently selected node has children
+     * @returns {boolean}
+     */
+    selectedHasChildren:function(){
+        return selectedHasChildren();
+    },
+    /**
+     * Returns true if the currently selected node is repeatable
+     * @returns {Boolean}
+     */
+    selectedIsRepeatable:function(){
+        let thisNode = itemCollection.findOne(Session.get('selectedItem'));
+        if (thisNode){
+            console.log(thisNode);
+            return thisNode.repeatable;
+        }
+        return false;
+    },
+    /**
+     * Returns true if the currently selected item is complete
+     * @returns {boolean}
+     */
+    isDone:function(){
         let thisItem = itemCollection.findOne(Session.get('selectedItem'));
         if (thisItem && thisItem.done){
             return true;
@@ -211,8 +302,22 @@ Template.itemTemp.helpers({
     hasIncompDescendants:function(){
         return (this.descendants > this.completeDescendants);
     },
+    isRepeatable:function(){
+        return this.repeatable;
+    },
     numCompleteText:function(){
-        return (this.descendants - this.completeDescendants) + ' remaining';
+        if (!this.repeatable){
+            return (this.descendants - this.completeDescendants) + ' remaining';
+        } else {
+            if (this.repeatableLimit){
+                if (this.repeatableLimit === this.repeated){
+                    return '';
+                }
+                return (this.repeatableLimit - this.repeated) + ' reps remaining';
+            } else {
+                return 'Done ' + this.repeated + ' times';
+            }
+        }
     },
     hasDate:function(){
         return !!this.date;
@@ -251,22 +356,65 @@ Template.itemTemp.events({
      */
     'click .itemLink':function(event){
         event.preventDefault();
-        if (this.children.length > 0){
-            goToChild(this._id, this.name);
-            closeFab();
-        } else {
-            if (Session.get('selectedItem') == null){
-                if ($('#controls-fab').hasClass('active')){
-                    closeFab();
-                }
+        //If nothing is selected
+        if (Session.get('selectedItem') == null) {
+            changeSelected(this._id);
+            if ($('#controls-fab').hasClass('active')){
+                closeFab();
             }
-            Session.set('selectedItem', this._id);
-            Tracker.afterFlush(function () {
-                openFab();
+            Tracker.afterFlush(function(){
+                bounceSpinFab();
             });
+        } else if (Session.get('selectedItem') == this._id){
+            //We selected the already selected one
+            if (this.children.length > 0){
+                //This one has children
+                goToChild(this._id, this.name);
+                closeFab();
+                Tracker.afterFlush(function(){
+                    bounceSpinFab();
+                });
+            }
+        } else {
+            //We had some other one selected
+            if (selectedHasChildren() != selectedHasChildren(this._id)){
+                //We only want to screw with the fab if the previously selected node was of a different type to the new one
+                Session.set('selectedItem', this._id);
+
+                //Reopen the fab if it was open to begin with
+                if ($('#controls-fab').hasClass('active')) {
+                    Tracker.afterFlush(function () {
+                        openFab();
+                    });
+                }
+                $('#controls-fab').removeClass('active');
+                Tracker.afterFlush(function(){
+                    bounceFab();
+                });
+            } else {
+                changeSelected(this._id);
+            }
         }
     }
 });
+
+/**
+ * Returns true if the selected item has children
+ * @param _id Optional parameter of item to check for children
+ * @returns {boolean}
+ */
+let selectedHasChildren = function(_id){
+    let id = _id || Session.get('selectedItem');
+    let thisItem = itemCollection.findOne(id);
+    if (thisItem && thisItem.descendants > 0){
+        return true;
+    }
+    return false;
+};
+
+let changeSelected = function(_id){
+    Session.set('selectedItem', _id);
+};
 
 /**
  * Moves the active child to the one with the provided _id
@@ -278,6 +426,7 @@ let goToChild = function(_id, name) {
     breadcrumbDep.changed();
     Session.set('activeItem', _id);
     Session.set('selectedItem', null);
+    history.pushState({id:_id}, "", name);
 };
 
 
@@ -296,7 +445,7 @@ let goBack = function(){
 };
 
 /**
- * Uses the descendants and completeDescendants pr1rties to calculate the completion ratio of a given node.
+ * Uses the descendants and completeDescendants to calculate the completion ratio of a given node.
  * @param _id ID of the node to check
  * @returns {number}
  */
@@ -306,6 +455,8 @@ let completePerc = function(_id){
     if (node){
         if (node.descendants > 0) {
             return node.completeDescendants / node.descendants;
+        } else if (node.repeatableLimit){
+            return node.repeated / node.repeatableLimit;
         }
         return node.done ? 1 : 0;
     }
@@ -355,3 +506,17 @@ let openFab = function(){
 let closeFab = function(){
     $('#controls-fab').closeFAB();
 };
+
+/**
+ * Bounces the fab to draw attention
+ */
+let bounceFab = function(){
+    bounce.applyTo($('#controls-fab-a'));
+}
+
+/**
+ * Spins and bounces the fab to draw attention
+ */
+let bounceSpinFab = function(){
+    bounceSpin.applyTo($('#controls-fab-a'));
+}

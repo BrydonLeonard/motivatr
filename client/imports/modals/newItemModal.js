@@ -21,10 +21,12 @@ Template.newItemModal.events({
     'submit #newItemForm': function (event) {
         event.preventDefault();
 
+        let newObj = {};
+
         let date;
         if ($('#hasDate')[0].checked){
             if ($('#dateLimit').val() != ''){
-                date = $('#dateLimit').val();
+                newObj.date = $('#dateLimit').val();
             } else {
                 date = null;
             }
@@ -32,28 +34,31 @@ Template.newItemModal.events({
             date = null;
         }
 
-        let priority = 0;
         if ($('#hasPriority')[0].checked){
-            priority = Number($('#priority').val());
-            console.log($('#priority').val());
+            newObj.priority = Number($('#priority').val());
         }
 
-        if ($('#hasDuplicates')[0].checked){
-            let duplicates = $('#duplicates').val();
-            Meteor.call('addMultiple', data.parent, event.target.itemName.value, date, priority, duplicates, function(e){
-                if (data.callback){
-                    data.callback(e);
-                    $('#newItemModal').closeModal();
-                }
-            });
-        } else {
-            Meteor.call('addChild', data.parent, event.target.itemName.value, date, priority, function (e) {
-                if (data.callback) {
-                    data.callback(e);
-                    $('#newItemModal').closeModal();
-                }
-            });
+        if ($('#hasIterable')[0].checked){
+            newObj.repeatable = true;
         }
+
+        if ($('#hasIterableLimit')[0].checked){
+            newObj.repeatableLimit = Number($('#iterableLimit').val());
+        }
+
+        newObj.parentId = data.parent;
+        newObj.name = event.target.itemName.value;
+
+        if ($('#hasDuplicates')[0].checked) {
+            newObj.duplicates = $('#duplicates').val();
+        }
+
+        Meteor.call('addChild', newObj, function(e){
+            if (data.callback) {
+                data.callback(e);
+                $('#newItemModal').closeModal();
+            }
+        });
 
     },
     /**
@@ -66,6 +71,12 @@ Template.newItemModal.events({
         checkBoxDep.changed();
     },
     'change #hasDuplicates':function(){
+        checkBoxDep.changed();
+    },
+    'change #hasIterable':function(){
+        checkBoxDep.changed();
+    },
+    'change #hasIterableLimit':function(){
         checkBoxDep.changed();
     }
 });
@@ -98,6 +109,16 @@ Template.newItemModal.helpers({
     hasDuplicates:function(){
         checkBoxDep.depend();
         let value = $('#hasDuplicates')[0] ? $('#hasDuplicates')[0].checked : false;
+        return value;
+    },
+    hasIterable:function(){
+        checkBoxDep.depend();
+        let value = $('#hasIterable')[0] ? $('#hasIterable')[0].checked : false;
+        return value;
+    },
+    hasIterableLimit:function(){
+        checkBoxDep.depend();
+        let value = $('#hasIterableLimit')[0] ? $('#hasIterableLimit')[0].checked : false;
         return value;
     },
     options: function(){

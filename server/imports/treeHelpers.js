@@ -92,7 +92,8 @@ let bubbleRemove = function(_id, complete){
 
 /**
  * Physically removes all descendants of a given node, but not the node itself
- * Will bubble changes before removing the nodes
+ * Does not bubble changes from removing the nodes
+ * Call bubbleAdd and then bubbleRemove on the parent node to complete a removal
  * <b>Must</b> be called before the node is removed from the tree
  * @param _id The id of the ancestor node whose descendants should be removed
  */
@@ -102,14 +103,6 @@ let sinkRemove = function(_id){
     for (let childId of thisNode.children) {
         let child = itemCollection.findOne(childId);
         sinkRemove(childId);
-
-        //Check whether the child is done
-        let childIsDone = false;
-        if ((child.descendants == child.completeDescendants && child.descendants != 0) || (child.done)){
-            childIsDone = true;
-        }
-
-        bubbleRemove(childId, childIsDone);
         itemCollection.remove(childId);
     }
     itemCollection.update(_id, {
@@ -137,6 +130,27 @@ let bubbleAdd = function(_id) {
 };
 
 /**
+ * Bubbles a change in the number of nodes down a branch of a tree
+ * @param _id The child of the node to be updated
+ * @param nodeChange The change in the number of nodes
+ * @param completeNodeChange The change in the number of complete nodes
+ */
+let bubbleUpdate = function(_id, nodeChange, completeNodeChange){
+    let parent = itemCollection.findOne({children: _id});
+
+    if (parent){
+        itemCollection.update(parent._id, {
+            $inc: {
+                descendants: nodeChange,
+                completeDescendants: completeNodeChange
+            }
+        });
+
+        bubbleUpdate(parent._id, nodeChange, completeNodeChange);
+    }
+};
+
+/**
  * Removes a node and the references from it's parent
  * Does <b>not</b> bubble the changes
  * @param _id The ID of the node to be removed
@@ -155,36 +169,47 @@ let removeLeaf = function(_id){
 /**
  * Adds a leaf node as a child of the given parent, or as a root if parentId is null.
  * Does <b>not</b> bubble the changes
- * @param parentId The ID of the parent of the new node, or null to add a root node
- * @param name The name of the new node
- * @param user The user that owns the node
- * @param date The due date of the item. Will be stored exactly as provided
+ * <b>If you screw up the object you send to this method it is going to be added to the database anyway</b>
+ * newObj:{
+ *  parent,
+ *  name,
+ *  user,
+ *  date,
+ *  priority,
+ *  repeatable,
+ *  repeatableLimit
+ * } are the valid fields
  * @returns {String} The id of the new node
  */
-let addLeaf = function(parentId, name, user, date, priority){
+let addLeaf = function(newObj) {
     //Allows this method to create root nodes as well
     //Checks permissions while acquiring the node
-    let parent = parentId ? itemCollection.findOne(parentId) : null;
+
+    let parent = newObj.parent ? itemCollection.findOne(newObj.parent) : null;
 
     let level = parent ? parent.level + 1 : 0;
 
+    newObj.level = level;
+    newObj.children = [];
+    if (newObj.repeatable) {
+        if (!newObj.repeatableLimit) {
+            newObj.done = true;
+        } else {
+            newObj.done = false;
+        }
+        newObj.repeated = 0;
+    } else {
+        newObj.done = false;
+    }
+    newObj.descendants = 0;
+    newObj.completeDescendants = 0;
+
     //Add the child to the db
-    let _id = itemCollection.insert({
-        level,
-        children: [],
-        descendants: 0,
-        completeDescendants: 0,
-        name,
-        done: false,
-        parent: parentId,
-        user,
-        date,
-        priority
-    });
+    let _id = itemCollection.insert(newObj);
 
     //Update the parent with the new child
     itemCollection.update({
-        _id:parentId
+        _id:newObj.parent
     }, {
         $push: {
             children: _id
@@ -193,4 +218,4 @@ let addLeaf = function(parentId, name, user, date, priority){
     return _id;
 };
 
-export { progress, bubbleComplete, bubbleRemove, sinkRemove, bubbleAdd, addLeaf, removeLeaf };
+export { progress, bubbleComplete, bubbleRemove, sinkRemove, bubbleAdd, bubbleUpdate, addLeaf, removeLeaf };

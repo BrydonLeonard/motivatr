@@ -203,29 +203,12 @@ describe('treeHelpers', () => {
             sinkRemove(l1);
 
             let thisNode = itemCollection.findOne(l1);
-            let parent = itemCollection.findOne(root);
 
-            console.log(thisNode);
-            console.log(parent);
+            let child1 = itemCollection.findOne(l2done);
+            let child2 = itemCollection.findOne(l2not);
 
-            expect(thisNode.descendants).to.equal(0);
-            expect(thisNode.completeDescendants).to.equal(0);
-
-            expect(parent.descendants).to.equal(1);
-            expect(parent.completeDescendants).to.equal(0);
-        });
-
-        it('can run sink remove on a node with no children', () => {
-            sinkRemove(l2done);
-
-            let parent = itemCollection.findOne(l1);
-            let grandparent = itemCollection.findOne(root);
-
-            expect(parent.descendants).to.equal(2);
-            expect(parent.completeDescendants).to.equal(1);
-
-            expect(grandparent.descendants).to.equal(3);
-            expect(grandparent.completeDescendants).to.equal(1);
+            expect(child1).to.not.exist;
+            expect(child2).to.not.exist;
         });
 
         it('can remove all children from a node', () => {

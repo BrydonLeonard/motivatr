@@ -21,33 +21,31 @@
 
         <!--FABS-->
         <div class="fixed-action-btn vertical click-to-toggle" style="bottom: 45px; right:25px" id="controls-fab">
-            <a class="btn-floating btn-large {{#if itemSelected}}orange lighten-2{{else}}teal accent-4{{/if}}" id="controls-fab-a">
-                <i class="material-icons">more_horiz</i>
+            {{#if itemSelected}}
+            <a class="btn-floating btn-large orange lighten-2" id="controls-fab-a">
+                <i class="material-icons">menu</i>
             </a>
             <ul>
-                {{#if itemSelected}}
-                    <li><a class="btn-floating orange lighten-2" id="splitChild"><i class="material-icons">call_split</i></a></li>
-                    <li><a class="btn-floating orange lighten-2" id="done"><i class="material-icons">{{#if isDone}}close{{else}}check{{/if}}</i></a></li>
-                    <li><a class="btn-floating orange lighten-2" id="remove"><i class="material-icons">delete</i></a></li>
-                    {{#unless true}}
-                        <li><a class="btn-floating teal accent-4" id="removeLevel"><i class="material-icons">delete_forever</i></a></li>
-                    {{/unless}}
-                    <li><a class="btn-floating teal accent-4" id="add"><i class="material-icons">add</i></a></li>
+                {{#if selectedHasChildren}}
+                    <li><a class="btn-floating orange lighten-2" id="openChild"><i class="material-icons">remove_red_eye</i></a></li>
                 {{else}}
-                    {{#unless true}}
-                        <li><a class="btn-floating teal accent-4" id="removeLevel"><i class="material-icons">delete_forever</i></a></li>
-                    {{/unless}}
-                    <li><a class="btn-floating teal accent-4" id="add"><i class="material-icons">add</i></a></li>
+                    {{#if selectedIsRepeatable}}
+                        <li><a class="btn-floating orange lighten-2" id="increaseReps"><i class="material-icons">keyboard_arrow_up</i></a></li>
+                        <li><a class="btn-floating orange lighten-2" id="decreaseReps"><i class="material-icons">keyboard_arrow_down</i></a></li>
+                    {{else}}
+                        <li><a class="btn-floating orange lighten-2" id="splitChild"><i class="material-icons">call_split</i></a></li>
+                        <li><a class="btn-floating orange lighten-2" id="done"><i class="material-icons">{{#if isDone}}close{{else}}check{{/if}}</i></a></li>
+                    {{/if}}
                 {{/if}}
+                <li><a class="btn-floating orange lighten-2" id="remove"><i class="material-icons">delete</i></a></li>
+                <li><a class="btn-floating teal accent-4 add" id="add"><i class="material-icons">add</i></a></li>
             </ul>
-        </div>
-        {{#unless root}}
-            <div class="fixed-action-btn" style="bottom: 45px; right: 100px">
-                <a class="btn-floating btn-large red lighten-2" id="back">
-                    <i class="material-icons">chevron_left</i>
+            {{else}}
+                <a class="btn-floating btn-large teal accent-4 add" id="controls-fab-a">
+                    <i class="material-icons">add</i>
                 </a>
-            </div>
-        {{/unless}}
+            {{/if}}
+        </div>
         <!--/FABS-->
 
         <!--BODY-->
@@ -69,6 +67,11 @@
         {{#if hasIncompDescendants}}
             <p>{{numCompleteText}}</p>
         {{else}}
+            {{#if isRepeatable}}
+                {{#unless done}}
+                    <p>{{numCompleteText}}</p>
+                {{/unless}}
+            {{/if}}
             {{#if hasDate}}
                 <p>{{dateLimit}}</p>
             {{/if}}

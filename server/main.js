@@ -5,7 +5,7 @@ import { completeClass, getVisChildren } from './imports/visTreeHelpers';
 import { completeLabel, getDesktopChildren } from './imports/desktopTreeHelpers';
 import * as Errors from './imports/errors';
 import * as Check from './imports/check';
-import { bubbleComplete, bubbleRemove, sinkRemove,  bubbleAdd, addLeaf, removeLeaf } from './imports/treeHelpers';
+import { bubbleComplete, bubbleRemove, sinkRemove,  bubbleAdd, bubbleUpdate, addLeaf, removeLeaf } from './imports/treeHelpers';
 import { initServices } from './imports/services';
 import moment from 'moment';
 
@@ -104,65 +104,93 @@ Meteor.methods({
     },
     /**
      * Adds a child node to the given parent
-     * @param parentId The parent ID
-     * @param name The child node's name
-     * @param date The due date of the new item (Optional or null)
-     * @param priority The priority of the new child
+     * props {
+     *  parentId,
+     *  name,
+     *  priority,
+     *  date,
+     *  repeatable,
+     *  repeatableLimit,
+     *  duplicates
+     * }
      * @return The new id
      */
-    addChild: function(parentId, name, date, priority){
-        let userId = this.userId;
-
-        let _id;
-
-        if (userId){
-            check(parentId, Match.OneOf(String, null));
-            check(name, String);
-
-            check(priority, Number);
-            check((priority >= 0 && priority < 6), true);
-
-            let formattedDate = (date != null) ? moment(date, 'DD MMMM, YYYY') : null;
-
-            if (date && formattedDate != null){
-                check(formattedDate.isValid(), true);
-            }
-
-            if (parentId != null) {
-                Check.nodePermissions(userId, parentId);
-            }
-
-
-
-            let parent = itemCollection.findOne(parentId);
-            if (parent && parent.done){
-                itemCollection.update(parentId, {
-                    $set: {
-                        done: false
-                    }
-                });
-                bubbleComplete(parentId, -1);
-            }
-
-            _id = addLeaf(parentId, name, userId, (formattedDate != null) ? formattedDate.toDate() : null, priority);
-            bubbleAdd(_id);
-        } else {
-            Errors.noLoginError();
+    addChild: function(props){
+        console.log(props);
+        let duplicates = 1;
+        if (props.duplicates){
+            duplicates = Number(props.duplicates);
         }
 
-        return _id;
-    },
-    /**
-     * Adds [number] new children, with the same name, suffixed by (index)
-     * @param parentId The parent ID
-     * @param name The child node's name
-     * @param date The due date of the new item (Optional or null)
-     * @param priority The priority of the new item
-     * @param number The number of new items to add
-     */
-    addMultiple: function(parentId, name, date, priority, number){
-        for (let i = 0; i < number; i++){
-            Meteor.call('addChild', parentId, name + ' (' + String(i + 1) + ')', date, priority, number);
+        for (let i = 0; i < duplicates; i++) {
+            let userId = this.userId;
+            let _id;
+            if (userId) {
+                let newObj = {};
+
+                //Check parentId
+                if (props.parentId) {
+                    check(props.parentId, String);
+                    newObj.parent = props.parentId;
+                } else {
+                    newObj.parent = null;
+                }
+
+                //Check name
+                check(props.name, String);
+                newObj.name = props.name + (i > 0 ? ' (' + (i+1) + ')' : '');
+
+                //Check priority
+                if (props.priority) {
+                    check(props.priority, Number);
+                    check((props.priority >= 0 && props.priority < 6), true);
+                    newObj.priority = props.priority;
+                } else {
+                    newObj.priority = 0;
+                }
+
+                //Check date
+                let formattedDate = null;
+                if (props.date) {
+                    formattedDate = moment(props.date, 'DD MMMM, YYYY')
+                }
+
+                if (props.date && formattedDate != null) {
+                    check(formattedDate.isValid(), true);
+                    newObj.date = formattedDate.toDate();
+                }
+
+                if (props.repeatable) {
+                    check(props.repeatable, Boolean);
+                    newObj.repeatable = props.repeatable;
+
+                    if (props.repeatableLimit) {
+                        check(props.repeatableLimit, Number);
+                        newObj.repeatableLimit = props.repeatableLimit;
+                    }
+                }
+
+                //Check access permissions
+                if (props.parentId != null) {
+                    Check.nodePermissions(userId, props.parentId);
+                }
+                newObj.user = userId;
+
+                let parent = itemCollection.findOne(props.parentId);
+                if (parent && parent.done) {
+                    itemCollection.update(props.parentId, {
+                        $set: {
+                            done: false
+                        }
+                    });
+                    bubbleComplete(props.parentId, -1);
+                }
+
+                _id = addLeaf(newObj);
+                bubbleAdd(_id);
+            } else {
+                Errors.noLoginError();
+            }
         }
     },
     /**
@@ -193,10 +221,11 @@ Meteor.methods({
         }
     },
     /**
-     * Remove
-     * @param _id
+     * Increments the reps on a repeatable object
+     * Will only work if reps < repeatableLimit or there is no repeatableLimit
+     * @param _id ID of the item to increment
      */
-    removeNode: function(_id){
+    increaseReps: function(_id){
         let userId = this.userId;
         if (userId){
             check(_id, String);
@@ -204,16 +233,114 @@ Meteor.methods({
             let node = Check.nodeExists(userId, _id);
             node = Check.nodePermissions(userId, _id, node);
 
-            //Remove from db
-            bubbleRemove(node._id, node.done);
-            sinkRemove(node._id);
-            itemCollection.remove(node._id);
+            if (!node.repeatable){
+                throw new Meteor.Error('not-repeatable', 'This node is not repeatable');
+            }
 
-            itemCollection.update(node.parent, {
-                $pull:{
-                    children: node._id
+            if (node.repeatableLimit && node.repeated >= node.repeatableLimit){
+                throw new Meteor.Error('repeats-max', 'Cannot increment this node any more');
+            }
+            itemCollection.update(_id, {
+                $inc: {
+                    repeated: 1
                 }
             });
+            if (node.repeatableLimit){
+                if ((node.repeated + 1) === node.repeatableLimit){
+                    bubbleComplete(_id, 1);
+                    itemCollection.update(_id, {
+                        $set: {
+                            done: true
+                        }
+                    });
+                }
+            }
+        } else {
+            Errors.noLoginError();
+        }
+    },
+    /**
+     * Decrements the reps on a repeatable object
+     * Will only work if reps > 1
+     * @param _id ID of the item to decrement
+     */
+    decreaseReps: function(_id){
+        let userId = this.userId;
+        if (userId){
+            check(_id, String);
+
+            let node = Check.nodeExists(userId, _id);
+            node = Check.nodePermissions(userId, _id, node);
+
+            if (!node.repeatable){
+                throw new Meteor.Error('not-repeatable', 'This node is not repeatable');
+            }
+
+            if (node.repeated <= 0){
+                throw new Meteor.Error('repeats-mix', 'Cannot decrement this node any more');
+            }
+            itemCollection.update(_id, {
+                $inc: {
+                    repeated: -1
+                }
+            });
+            if (node.repeatableLimit){
+                if (node.repeated === node.repeatableLimit){
+                    bubbleComplete(_id, -1);
+                    itemCollection.update(_id, {
+                        $set: {
+                            done: false
+                        }
+                    });
+                }
+            }
+        } else {
+            Errors.noLoginError();
+        }
+    },
+    /**
+     * Remove
+     * @param _id
+     */
+    removeNode: function(_id){
+        //TODO add case for removing a root node. Those don't need so much checking
+        let userId = this.userId;
+        if (userId){
+            check(_id, String);
+
+            let node = Check.nodeExists(userId, _id);
+            node = Check.nodePermissions(userId, _id, node);
+
+            if (node.descendants === 0) {
+                //We are requested to remove a leaf node
+                bubbleRemove(node._id, node.done);
+                sinkRemove(node._id);
+                itemCollection.remove(node._id);
+
+                itemCollection.update(node.parent, {
+                    $pull: {
+                        children: node._id
+                    }
+                });
+            } else {
+                //We are requested to remove an internal node
+                //Remove the nodes from the ancestor's counters
+                bubbleUpdate(node._id, -node.descendants - 1, -node.completeDescendants + (node.descendants === node.completeDescendants ? -1 : 0));
+                //Physically remove child nodes
+                sinkRemove(node._id);
+                //Add the node back to fix the tree
+                bubbleAdd(node._id);
+                //Remove the node from the tree
+                bubbleRemove(node._id);
+                //Phyiscally remove the node from the db
+                itemCollection.remove(node._id);
+
+                itemCollection.update(node.parent, {
+                    $pull: {
+                        children: node._id
+                    }
+                })
+            }
         }
     },
     /**
@@ -227,8 +354,6 @@ Meteor.methods({
 
             let node = Check.nodeExists(userId, _id);
             node = Check.nodePermissions(userId, _id, node);
-
-            console.log(node);
 
             sinkRemove(_id);
         }

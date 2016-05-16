@@ -43,5 +43,9 @@ Template.sidenav.helpers({
 })
 
 Template.blankLayout.onRendered(function(){
-    $('body').css({'padding-left':0});
+    $('body').addClass('no-left-padding');
 });
+
+Template.blankLayout.onDestroyed(function(){
+    $('body').removeClass('no-left-padding');
+})
