@@ -10,11 +10,9 @@ Template.signup.events({
         if ($('#password1').val() != $('#password2').val()){
             $('#password1').addClass('nomatch');
             $('#password2').addClass('nomatch');
-            console.log('1');
         } else {
             $('#password1').removeClass('nomatch');
             $('#password2').removeClass('nomatch');
-            console.log('2');
         }
     },
     /**

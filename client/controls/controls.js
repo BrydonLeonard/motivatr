@@ -2,8 +2,6 @@ import { Router } from 'meteor/iron:router';
 import 'meteor/materialize:materialize';
 import './controls.html';
 
-console.log('controls.js');
-
 Template.sidenav.onRendered(function(){
     $('.button-collapse').sideNav({
     });
@@ -34,11 +32,12 @@ Template.sidenav.events({
 Template.sidenav.helpers({
     name: function(){
         if (Meteor.user()) {
-            if (Meteor.user().profile.name){
+            if (Meteor.user().profile && Meteor.user().profile.name){
                 return Meteor.user().profile.name;
             }
             return Meteor.user().username;
         }
+        return '';
     }
 })
 

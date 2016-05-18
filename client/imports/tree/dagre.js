@@ -37,7 +37,6 @@
     };
 
 },{"./lib/debug":6,"./lib/graphlib":7,"./lib/layout":9,"./lib/util":29,"./lib/version":30}],2:[function(require,module,exports){
-    "use strict";
 
     var _ = require("./lodash"),
         greedyFAS = require("./greedy-fas");
@@ -146,7 +145,6 @@
     }
 
 },{"./lodash":10,"./util":29}],4:[function(require,module,exports){
-    "use strict";
 
     var _ = require("./lodash");
 
@@ -451,7 +449,6 @@
     }
 
 },{"./data/list":5,"./graphlib":7,"./lodash":10}],9:[function(require,module,exports){
-    "use strict";
 
     var _ = require("./lodash"),
         acyclic = require("./acyclic"),
@@ -996,7 +993,6 @@
     }
 
 },{"./lodash":10,"./util":29}],12:[function(require,module,exports){
-    "use strict";
 
     var _ = require("./lodash"),
         util = require("./util");
@@ -1248,7 +1244,6 @@
     }
 
 },{"../graphlib":7,"../lodash":10}],16:[function(require,module,exports){
-    "use strict";
 
     var _ = require("../lodash");
 
@@ -1320,7 +1315,6 @@
     }
 
 },{"../lodash":10}],17:[function(require,module,exports){
-    "use strict";
 
     var _ = require("../lodash"),
         initOrder = require("./init-order"),
@@ -1401,7 +1395,6 @@
     }
 
 },{"../graphlib":7,"../lodash":10,"../util":29,"./add-subgraph-constraints":13,"./build-layer-graph":15,"./cross-count":16,"./init-order":18,"./sort-subgraph":20}],18:[function(require,module,exports){
-    "use strict";
 
     var _ = require("../lodash");
 
@@ -1441,7 +1434,6 @@
     }
 
 },{"../lodash":10}],19:[function(require,module,exports){
-    "use strict";
 
     var _ = require("../lodash");
 
@@ -1791,7 +1783,6 @@
     }
 
 },{"./lodash":10}],23:[function(require,module,exports){
-    "use strict";
 
     var _ = require("../lodash"),
         Graph = require("../graphlib").Graph,
@@ -2191,7 +2182,6 @@
     }
 
 },{"../graphlib":7,"../lodash":10,"../util":29}],24:[function(require,module,exports){
-    "use strict";
 
     var _ = require("../lodash"),
         util = require("../util"),
@@ -2223,7 +2213,6 @@
 
 
 },{"../lodash":10,"../util":29,"./bk":23}],25:[function(require,module,exports){
-    "use strict";
 
     var _ = require("../lodash"),
         Graph = require("../graphlib").Graph,
@@ -2314,7 +2303,6 @@
     }
 
 },{"../graphlib":7,"../lodash":10,"./util":28}],26:[function(require,module,exports){
-    "use strict";
 
     var rankUtil = require("./util"),
         longestPath = rankUtil.longestPath,
@@ -2364,7 +2352,6 @@
     }
 
 },{"./feasible-tree":25,"./network-simplex":27,"./util":28}],27:[function(require,module,exports){
-    "use strict";
 
     var _ = require("../lodash"),
         feasibleTree = require("./feasible-tree"),
@@ -2600,7 +2587,6 @@
     }
 
 },{"../graphlib":7,"../lodash":10,"../util":29,"./feasible-tree":25,"./util":28}],28:[function(require,module,exports){
-    "use strict";
 
     var _ = require("../lodash");
 
@@ -2663,7 +2649,6 @@
     }
 
 },{"../lodash":10}],29:[function(require,module,exports){
-    "use strict";
 
     var _ = require("./lodash"),
         Graph = require("./graphlib").Graph;
@@ -3489,7 +3474,6 @@
     };
 
 },{"../lodash":49}],46:[function(require,module,exports){
-    "use strict";
 
     var _ = require("./lodash");
 

@@ -244,7 +244,6 @@ Template.todoContainer.helpers({
     selectedIsRepeatable:function(){
         let thisNode = itemCollection.findOne(Session.get('selectedItem'));
         if (thisNode){
-            console.log(thisNode);
             return thisNode.repeatable;
         }
         return false;
