@@ -5,8 +5,6 @@ Router.configure({
     layoutTemplate:'defaultLayout'
 });
 
-console.log('_router.js');
-
 Router.route('/menu', function(){
     this.render('todoContainer')
     },{

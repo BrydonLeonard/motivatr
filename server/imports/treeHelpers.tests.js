@@ -74,7 +74,10 @@ describe('treeHelpers', () => {
         });
 
         it('can add a leaf node', () => {
-            let _id = addLeaf(l1, 'newNode', null);
+            let _id = addLeaf({
+                parent: l1,
+                name: 'newNode'
+            });
 
             expect(itemCollection.find({children:_id}).count()).to.equal(1);
 
@@ -86,7 +89,9 @@ describe('treeHelpers', () => {
         });
 
         it('can add a root node', () => {
-            let _id = addLeaf(null, 'newNode', null);
+            let _id = addLeaf({
+                name: 'newNode'
+            });
 
             expect(itemCollection.find({children:_id}).count()).to.equal(0);
 

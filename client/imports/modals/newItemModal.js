@@ -40,11 +40,11 @@ Template.newItemModal.events({
 
         if ($('#hasIterable')[0].checked){
             newObj.repeatable = true;
+            if ($('#hasIterableLimit')[0].checked){
+                newObj.repeatableLimit = Number($('#iterableLimit').val());
+            }
         }
 
-        if ($('#hasIterableLimit')[0].checked){
-            newObj.repeatableLimit = Number($('#iterableLimit').val());
-        }
 
         newObj.parentId = data.parent;
         newObj.name = event.target.itemName.value;

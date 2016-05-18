@@ -72,7 +72,7 @@ let resetDB = function(user){
 
 
 describe('Meteor Methods', () => {
-    describe('Tree modifiers', () => {
+    describe('Regular nodes', () => {
         let root;
         let l1;
         let l2done;
@@ -266,11 +266,361 @@ describe('Meteor Methods', () => {
             let thisNode = itemCollection.findOne(l1);
             let parent = itemCollection.findOne(root);
 
-            expect(thisNode.descendants).to.equal(0);
-            expect(thisNode.completeDescendants).to.equal(0);
+            //This method should not actually be bubbling changes. Ensure that it isn't
+            expect(thisNode.descendants).to.equal(2);
+            expect(thisNode.completeDescendants).to.equal(1);
+
+            expect(parent.descendants).to.equal(3);
+            expect(parent.completeDescendants).to.equal(1);
+
+            expect(itemCollection.findOne(l2done)).to.not.exist;
+            expect(itemCollection.findOne(l2not)).to.not.exist;
+        });
+
+        it('can remove a node with assorted children', () => {
+            let removeNode = Meteor.server.method_handlers['removeNode'];
+            let invocation = { userId };
+
+            removeNode.apply(invocation, [l1]);
+
+            let parent = itemCollection.findOne(root);
+
+            expect(parent.descendants).to.equal(0);
+            expect(parent.completeDescendants).to.equal(0);
+            expect(parent.children.length).to.equal(0);
+        });
+
+        it('can remove a node with children, all complete', () => {
+            let removeNode = Meteor.server.method_handlers['removeNode'];
+            let invocation = { userId };
+            itemCollection.update(l2not, {
+                    $set: {
+                        done: true
+                    }
+                });
+            itemCollection.update(l1, {
+                $set: {
+                    completeDescendants: 2
+                }
+            });
+            itemCollection.update(root, {
+                $set: {
+                    completeDescendants: 3
+                }
+            });
+
+            removeNode.apply(invocation, [l1]);
+
+            let parent = itemCollection.findOne(root);
+
+            expect(parent.descendants).to.equal(0);
+            expect(parent.completeDescendants).to.equal(0);
+            expect(parent.children.length).to.equal(0);
+        });
+
+        it('can remove a node with children, all incomplete', () => {
+            let removeNode = Meteor.server.method_handlers['removeNode'];
+            let invocation = { userId };
+            itemCollection.update(l2done, {
+                $set: {
+                    done: false
+                }
+            });
+            itemCollection.update(l1, {
+                $set: {
+                    completeDescendants: 0
+                }
+            });
+            itemCollection.update(root, {
+                $set: {
+                    completeDescendants: 0
+                }
+            });
+
+            removeNode.apply(invocation, [l1]);
+
+            let parent = itemCollection.findOne(root);
+
+            expect(parent.descendants).to.equal(0);
+            expect(parent.completeDescendants).to.equal(0);
+            expect(parent.children.length).to.equal(0);
+
+        });
+
+        it('can remove a root node', () => {
+            let removeNode = Meteor.server.method_handlers['removeNode'];
+            let invocation = { userId };
+
+            removeNode.apply(invocation, [root]);
+
+            expect(itemCollection.find().count()).to.equal(0);
+        });
+    });
+
+    describe('Repeatable nodes', () => {
+        let root;
+        let l1;
+        let l2done;
+        let l2not;
+        let userId;
+
+        beforeEach(() => {
+            userId = '10';
+            let vals = resetDB(10);
+            root = vals.root;
+            l1 = vals.l1;
+            l2done = vals.l2done;
+            l2not = vals.l2not;
+        });
+
+        it('can add a repNode to a complete node', () => {
+            let addChild = Meteor.server.method_handlers['addChild'];
+            let invocation = { userId };
+            let repNodeId = addChild.apply(invocation, [{
+                parentId: l2done,
+                name: 'repNode',
+                repeatable: true
+            }]);
+
+
+            let newNode = itemCollection.findOne(repNodeId);
+            let parent = itemCollection.findOne(l2done);
+            let grandparent = itemCollection.findOne(l1);
+            let greatGrandparent = itemCollection.findOne(root);
+
+            expect(newNode.repeatable).to.equal(true);
+            expect(newNode.repeated).to.equal(0);
+            expect(newNode.repeatableLimit).to.not.exist;
+            expect(newNode.done).to.equal(true);
+
+            expect(parent.descendants).to.equal(1);
+            expect(parent.completeDescendants).to.equal(1);
+
+            expect(grandparent.descendants).to.equal(3);
+            expect(grandparent.completeDescendants).to.equal(2);
+
+            expect(greatGrandparent.descendants).to.equal(4);
+            expect(greatGrandparent.completeDescendants).to.equal(2);
+        });
+
+        it('can add a limited repNode to a complete node', () => {
+            let addChild = Meteor.server.method_handlers['addChild'];
+            let invocation = { userId };
+            let repNodeId = addChild.apply(invocation, [{
+                parentId: l2done,
+                name: 'repNode',
+                repeatable: true,
+                repeatableLimit: 3
+            }]);
+
+            let newNode = itemCollection.findOne(repNodeId);
+            let parent = itemCollection.findOne(l2done);
+            let grandparent = itemCollection.findOne(l1);
+            let greatGrandparent = itemCollection.findOne(root);
+
+            expect(newNode.repeatable).to.equal(true);
+            expect(newNode.repeated).to.equal(0);
+            expect(newNode.repeatableLimit).to.equal(3);
+            expect(newNode.done).to.equal(false);
 
             expect(parent.descendants).to.equal(1);
             expect(parent.completeDescendants).to.equal(0);
+
+            expect(grandparent.descendants).to.equal(3);
+            expect(grandparent.completeDescendants).to.equal(0);
+
+            expect(greatGrandparent.descendants).to.equal(4);
+            expect(greatGrandparent.completeDescendants).to.equal(0);
+        });
+
+        it('can add a repNode to an incomplete node', () => {
+            let addChild = Meteor.server.method_handlers['addChild'];
+            let invocation = { userId };
+            let repNodeId = addChild.apply(invocation, [{ parentId: l2not, name: 'repNode', repeatable: true }]);
+
+            let newNode = itemCollection.findOne(repNodeId);
+            let parent = itemCollection.findOne(l2not);
+            let grandparent = itemCollection.findOne(l1);
+            let greatGrandparent = itemCollection.findOne(root);
+
+            expect(newNode.repeatable).to.equal(true);
+            expect(newNode.repeated).to.equal(0);
+            expect(newNode.repeatableLimit).to.not.exist;
+            expect(newNode.done).to.equal(true);
+
+            expect(parent.descendants).to.equal(1);
+            expect(parent.completeDescendants).to.equal(1);
+
+            expect(grandparent.descendants).to.equal(3);
+            expect(grandparent.completeDescendants).to.equal(3);
+
+            expect(greatGrandparent.descendants).to.equal(4);
+            expect(greatGrandparent.completeDescendants).to.equal(4);
+        });
+
+        it('can add a limited repNode to an incomplete node', () => {
+            let addChild = Meteor.server.method_handlers['addChild'];
+            let invocation = { userId };
+            let repNodeId = addChild.apply(invocation, [{ parentId: l2not, name: 'repNode', repeatable: true, repeatableLimit: 3}]);
+
+            let newNode = itemCollection.findOne(repNodeId);
+            let parent = itemCollection.findOne(l2not);
+            let grandparent = itemCollection.findOne(l1);
+            let greatGrandparent = itemCollection.findOne(root);
+
+            expect(newNode.repeatable).to.equal(true);
+            expect(newNode.repeated).to.equal(0);
+            expect(newNode.repeatableLimit).to.equal(3);
+            expect(newNode.done).to.equal(false);
+
+            expect(parent.descendants).to.equal(1);
+            expect(parent.completeDescendants).to.equal(0);
+
+            expect(grandparent.descendants).to.equal(3);
+            expect(grandparent.completeDescendants).to.equal(1);
+
+            expect(greatGrandparent.descendants).to.equal(4);
+            expect(greatGrandparent.completeDescendants).to.equal(1);
+        });
+
+        it('can add a repNode as a sibling of other nodes', () => {
+            let addChild = Meteor.server.method_handlers['addChild'];
+            let invocation = { userId };
+            let _id = addChild.apply(invocation, [{ parentId: l1, name: 'repNode', repeatable: true}]);
+
+            let newNode = itemCollection.findOne(_id);
+            let parent = itemCollection.findOne(l1);
+            let grandparent = itemCollection.findOne(root);
+
+            expect(newNode.repeatable).to.equal(true);
+            expect(newNode.repeated).to.equal(0);
+            expect(newNode.done).to.equal(true);
+
+            expect(parent.descendants).to.equal(3);
+            expect(parent.completeDescendants).to.equal(2);
+
+            expect(grandparent.descendants).to.equal(4);
+            expect(grandparent.completeDescendants).to.equal(2);
+        });
+
+        it('can add a limited repNode as a sibling of other nodes', () => {
+            let addChild = Meteor.server.method_handlers['addChild'];
+            let invocation = { userId };
+            let _id = addChild.apply(invocation, [{ parentId: l1, name: 'repNode', repeatable: true, repeatableLimit: 3}]);
+
+            let newNode = itemCollection.findOne(_id);
+            let parent = itemCollection.findOne(l1);
+            let grandparent = itemCollection.findOne(root);
+
+            expect(newNode.repeatable).to.equal(true);
+            expect(newNode.repeated).to.equal(0);
+            expect(newNode.repeatableLimit).to.equal(3);
+            expect(newNode.done).to.equal(false);
+
+            expect(parent.descendants).to.equal(3);
+            expect(parent.completeDescendants).to.equal(1);
+
+            expect(grandparent.descendants).to.equal(4);
+            expect(grandparent.completeDescendants).to.equal(1);
+        });
+
+        it('can complete a repNode, causing the parent to become complete', () => {
+            itemCollection.update(l2not, {
+                $set:{
+                    repeatable: true,
+                    repeatableLimit: 3,
+                    repeated:2
+                }
+            });
+
+            let incReps = Meteor.server.method_handlers['increaseReps'];
+            let invocation = { userId };
+            incReps.apply(invocation, [l2not]);
+
+            let node = itemCollection.findOne(l2not);
+            let parent = itemCollection.findOne(l1);
+            let grandparent = itemCollection.findOne(root);
+
+            expect(node.done).to.equal(true);
+            expect(node.repeated).to.equal(3);
+            expect(node.repeatableLimit).to.equal(3);
+
+            expect(parent.descendants).to.equal(2);
+            expect(parent.completeDescendants).to.equal(2);
+
+            expect(grandparent.descendants).to.equal(3);
+            expect(grandparent.completeDescendants).to.equal(3);
+        });
+
+        it('can uncomplete a repNode, causing the parent to become incomplete', () => {
+            itemCollection.update(l2not, {
+                $set:{
+                    repeatable: true,
+                    repeatableLimit: 3,
+                    repeated:3,
+                    done:true
+                }
+            });
+            itemCollection.update(l1, {
+                $set:{
+                    descendants: 2,
+                    completeDescendants:2
+                }
+            });
+            itemCollection.update(root, {
+                $set:{
+                    descendants:3,
+                    completeDescendants:3
+                }
+            });
+
+            let decReps = Meteor.server.method_handlers['decreaseReps'];
+            let invocation = { userId };
+            decReps.apply(invocation, [l2not]);
+
+            let node = itemCollection.findOne(l2not);
+            let parent = itemCollection.findOne(l1);
+            let grandparent = itemCollection.findOne(root);
+
+            expect(node.done).to.equal(false);
+            expect(node.repeated).to.equal(2);
+            expect(node.repeatableLimit).to.equal(3);
+
+            expect(parent.descendants).to.equal(2);
+            expect(parent.completeDescendants).to.equal(1);
+
+            expect(grandparent.descendants).to.equal(3);
+            expect(grandparent.completeDescendants).to.equal(1);
+        });
+
+        it('will correctly throw errors if attempts are made to inc/dec outside of bounds', () => {
+            itemCollection.update(l2not, {
+                $set:{
+                    repeatable: true,
+                    repeated:0
+                }
+            });
+            itemCollection.update(l2done, {
+                $set:{
+                    repeatable:true,
+                    repeated:3,
+                    repeatableLimit:3
+                }
+            });
+
+            let incReps = Meteor.server.method_handlers['increaseReps'];
+            let decReps = Meteor.server.method_handlers['decreaseReps'];
+            invocation = { userId };
+
+            let incMeth = () => {
+                incReps.apply(invocation, l2done);
+            }
+            let decMeth = () => {
+                decReps.apply(invocation, l2not);
+            }
+
+            expect(incMeth).to.throw(Error);
+            expect(decMeth).to.throw(Error);
         });
     });
 
@@ -291,7 +641,7 @@ describe('Meteor Methods', () => {
             l2not = vals.l2not;
         });
 
-
+/*
         it('can generate the structure to be displayed by jqtree', () => {
             let desktopTreeData = Meteor.server.method_handlers['desktopTreeData'];
             let invocation = { userId };
@@ -318,7 +668,7 @@ describe('Meteor Methods', () => {
 
             expect(data).to.eql(expected);
 
-        });
+        });*/
 
         it('can generate the structure to be displayed by cytoscape', () => {
             // We need to be able to give a funciton that takes a callback to Meteor.wrapAsync
@@ -335,9 +685,37 @@ describe('Meteor Methods', () => {
              { data: { id: 'edgeId1', target: l2done, source: l1 } },
              { data: { id: 'edgeId2', target: l2not, source: l1 } }];
 
-            for (let i = 0; i < data.length; i++){
-                expect(data[i]).to.eql(expected[i]);
-            }
+            expect(data[0]).to.have.deep.property('data.id', root);
+            expect(data[0]).to.have.deep.property('data.name', 'root');
+            expect(data[0]).to.have.deep.property('scratch.parent', null);
+            expect(data[0]).to.have.property('classes', 'root');
+
+            expect(data[1]).to.have.deep.property('data.id', l1);
+            expect(data[1]).to.have.deep.property('data.name', 'l1');
+            expect(data[1]).to.have.deep.property('scratch.parent', root);
+            expect(data[1]).to.have.property('classes', '');
+
+            expect(data[2]).to.have.deep.property('data.id', l2done);
+            expect(data[2]).to.have.deep.property('data.name', 'l2done');
+            expect(data[2]).to.have.deep.property('scratch.parent', l1);
+            expect(data[2]).to.have.property('classes', 'complete ');
+
+            expect(data[3]).to.have.deep.property('data.id', l2not);
+            expect(data[3]).to.have.deep.property('data.name', 'l2not');
+            expect(data[3]).to.have.deep.property('scratch.parent', l1);
+            expect(data[3]).to.have.property('classes', '');
+
+            expect(data[4]).to.have.deep.property('data.id', 'edgeId0');
+            expect(data[4]).to.have.deep.property('data.target', l1);
+            expect(data[4]).to.have.deep.property('data.source', root);
+
+            expect(data[5]).to.have.deep.property('data.id', 'edgeId1');
+            expect(data[5]).to.have.deep.property('data.target', l2done);
+            expect(data[5]).to.have.deep.property('data.source', l1);
+
+            expect(data[6]).to.have.deep.property('data.id', 'edgeId2');
+            expect(data[6]).to.have.deep.property('data.target', l2not);
+            expect(data[6]).to.have.deep.property('data.source', l1);
         });
 
     });

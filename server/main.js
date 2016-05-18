@@ -113,10 +113,9 @@ Meteor.methods({
      *  repeatableLimit,
      *  duplicates
      * }
-     * @return The new id
+     * @return The new id, if only 1 element was added
      */
     addChild: function(props){
-        console.log(props);
         let duplicates = 1;
         if (props.duplicates){
             duplicates = Number(props.duplicates);
@@ -138,7 +137,7 @@ Meteor.methods({
 
                 //Check name
                 check(props.name, String);
-                newObj.name = props.name + (i > 0 ? ' (' + (i+1) + ')' : '');
+                newObj.name = props.name + (duplicates > 1 ? ' (' + (i+1) + ')' : '');
 
                 //Check priority
                 if (props.priority) {
@@ -188,6 +187,15 @@ Meteor.methods({
 
                 _id = addLeaf(newObj);
                 bubbleAdd(_id);
+
+                if (props.repeatable && !props.repeatableLimit){
+                    bubbleComplete(_id, 1);
+                }
+
+
+                if (duplicates === 1){
+                    return _id;
+                }
             } else {
                 Errors.noLoginError();
             }
@@ -299,7 +307,8 @@ Meteor.methods({
         }
     },
     /**
-     * Remove
+     * Removes a node
+     * If the node has children, will remove them and bubble necessary changes up the tree
      * @param _id
      */
     removeNode: function(_id){
@@ -345,6 +354,7 @@ Meteor.methods({
     },
     /**
      * Removes the children of a given node
+     * No changes are bubbled and the children are not removed from their parent's arrays
      * @param _id The id of the node whose children should be removed
      */
     removeChildren: function(_id){

@@ -185,6 +185,10 @@ let addLeaf = function(newObj) {
     //Allows this method to create root nodes as well
     //Checks permissions while acquiring the node
 
+    //Set parent to null if not present
+    if (!newObj.parent){
+        newObj.parent = null;
+    }
     let parent = newObj.parent ? itemCollection.findOne(newObj.parent) : null;
 
     let level = parent ? parent.level + 1 : 0;
