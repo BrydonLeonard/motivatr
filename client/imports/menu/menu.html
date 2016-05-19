@@ -67,9 +67,7 @@
             <p>{{numCompleteText}}</p>
         {{else}}
             {{#if isRepeatable}}
-                {{#unless done}}
-                    <p>{{numCompleteText}}</p>
-                {{/unless}}
+                <p>{{numCompleteText}}</p>
             {{/if}}
             {{#if hasDate}}
                 <p>{{dateLimit}}</p>
