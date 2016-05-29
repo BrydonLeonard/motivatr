@@ -5,7 +5,7 @@ import { completeClass, getVisChildren } from './imports/visTreeHelpers';
 import { completeLabel, getDesktopChildren } from './imports/desktopTreeHelpers';
 import * as Errors from './imports/errors';
 import * as Check from './imports/check';
-import { bubbleComplete, bubbleRemove, sinkRemove,  bubbleAdd, bubbleUpdate, addLeaf, removeLeaf } from './imports/treeHelpers';
+import { bubbleComplete, bubbleRemove, sinkRemove,  bubbleAdd, bubbleUpdate, addLeaf, removeLeaf, bubbleLevel } from './imports/treeHelpers';
 import { initServices } from './imports/services';
 import moment from 'moment';
 
@@ -366,6 +366,67 @@ Meteor.methods({
             node = Check.nodePermissions(userId, _id, node);
 
             sinkRemove(_id);
+        }
+    },
+    /**
+     * Moves a subtree to be a child of the given node
+     * If the parent node is null, the subtree will be made into a new root node
+     * @param rootId The id of the root of the subtree to be moved
+     * @param parentId The id of the new parent of the root of the subtree
+     */
+    //TODO: Tests for adoptChild
+    adoptChild: function(rootId, parentId){
+        let userId = this.userId;
+        if (userId){
+            check(rootId, String);
+
+            let parent = null;
+
+            if (parentId != null){
+                let parent = Check.nodeExists(userId, parentId);
+                parent = Check.nodePermissions(userId, parentId, parent);
+            }
+
+            let node = Check.nodeExists(userId, rootId);
+            node = Check.nodePermissions(userId, rootId, node);
+
+            if (node.parent === null && parentId === null){
+                throw new Meteor.Error('is-root', 'This node is a root node');
+            }
+
+            //We need to update the ancestors of the node we're about to move
+            bubbleUpdate(node._id, -node.descendants - 1, -node.completeDescendants + (node.descendants === node.completeDescendants ? -1 : 0));
+
+            //The add/remove fix
+            //TODO: implement a more efficient way of doing this
+            bubbleAdd(node._id);
+            bubbleRemove(node._id);
+
+            itemCollection.update(node.parent, {
+                $pull: {
+                    _id: node._id
+                }
+            });
+            //We've finished fixing the old ancestors
+
+            if (parent === null){
+                itemCollection.update(node._id, {
+                    $set: {
+                        parent: null,
+                        level: 0
+                    }
+                });
+            } else {
+                itemCollection.update(parent._id, {
+                    $push: {
+                        children: node._id
+                    }
+                });
+
+                //We can use the counters on the root of the subtree to update the ancestors
+                bubbleUpdate(node._id, node.descendants, node.completeDescendants);
+                bubbleLevel(parent._id);
+            }
         }
     }
 });

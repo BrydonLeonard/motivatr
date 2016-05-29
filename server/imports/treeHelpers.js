@@ -222,4 +222,21 @@ let addLeaf = function(newObj) {
     return _id;
 };
 
-export { progress, bubbleComplete, bubbleRemove, sinkRemove, bubbleAdd, bubbleUpdate, addLeaf, removeLeaf };
+/**
+ * Will work from the given node, ensuring that it's children's levels are correct
+ * @param _id The id of the node from which to work down
+ */
+    //TODO test cases for bubbleLevel
+let bubbleLevel = function(_id){
+    let currentNode = itemCollection.findOne(_id);
+    for (let childId of currentNode.children){
+        itemCollection.update(childId, {
+            $set: {
+                level: 0
+            }
+        });
+        bubbleLevel(childId);
+    }
+}
+
+export { progress, bubbleComplete, bubbleRemove, sinkRemove, bubbleAdd, bubbleUpdate, addLeaf, removeLeaf, bubbleLevel };
