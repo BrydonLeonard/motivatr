@@ -3,10 +3,34 @@ import 'meteor/materialize:materialize';
 import './controls.html';
 
 Template.sidenav.onRendered(function(){
-    $('.button-collapse').sideNav({
-    });
+    if(detectMobile() == true){
+        $('.button-collapse').sideNav({
+            closeOnClick: true
+        });
+    }
+    else{
+        $('.button-collapse').sideNav({
+        });
+    }
+
     $('.collapsible').collapsible();
 });
+
+function detectMobile() {
+    if( navigator.userAgent.match(/Android/i)
+        || navigator.userAgent.match(/webOS/i)
+        || navigator.userAgent.match(/iPhone/i)
+        || navigator.userAgent.match(/iPad/i)
+        || navigator.userAgent.match(/iPod/i)
+        || navigator.userAgent.match(/BlackBerry/i)
+        || navigator.userAgent.match(/Windows Phone/i)
+    ){
+        return true;
+    }
+    else {
+        return false;
+    }
+}
 
 Template.sidenav.events({
     'click [name="menu"]':function(event){
