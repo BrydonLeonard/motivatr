@@ -334,7 +334,18 @@ Meteor.methods({
             } else {
                 //We are requested to remove an internal node
                 //Remove the nodes from the ancestor's counters
-                bubbleUpdate(node._id, -node.descendants - 1, -node.completeDescendants + (node.descendants === node.completeDescendants ? -1 : 0));
+                let completeUpdate = 0;
+                if (node.descendants > 0){
+                    completeUpdate -= node.completeDescendants;
+                    if (node.descendants === node.completeDescendants){
+                        completeUpdate -= 1;
+                    }
+                } else {
+                    if (node.done){
+                        completeUpdate -= 1;
+                    }
+                }
+                bubbleUpdate(node._id, -node.descendants - 1, completeUpdate);
                 //Physically remove child nodes
                 sinkRemove(node._id);
                 //Add the node back to fix the tree
@@ -383,7 +394,7 @@ Meteor.methods({
             let parent = null;
 
             if (parentId != null){
-                let parent = Check.nodeExists(userId, parentId);
+                parent = Check.nodeExists(userId, parentId);
                 parent = Check.nodePermissions(userId, parentId, parent);
             }
 
@@ -395,7 +406,19 @@ Meteor.methods({
             }
 
             //We need to update the ancestors of the node we're about to move
-            bubbleUpdate(node._id, -node.descendants - 1, -node.completeDescendants + (node.descendants === node.completeDescendants ? -1 : 0));
+            let completeUpdate = 0;
+            if (node.descendants > 0){
+                completeUpdate -= node.completeDescendants;
+                if (node.descendants === node.completeDescendants){
+                    completeUpdate -= 1;
+                }
+            } else {
+                if (node.done){
+                    completeUpdate -= 1;
+                }
+            }
+
+            bubbleUpdate(node._id, -node.descendants - 1, completeUpdate);
 
             //The add/remove fix
             //TODO: implement a more efficient way of doing this
@@ -404,7 +427,7 @@ Meteor.methods({
 
             itemCollection.update(node.parent, {
                 $pull: {
-                    _id: node._id
+                    children: node._id
                 }
             });
             //We've finished fixing the old ancestors
@@ -423,8 +446,14 @@ Meteor.methods({
                     }
                 });
 
+                itemCollection.update(node._id, {
+                    $set: {
+                        parent: parent._id
+                    }
+                });
+
                 //We can use the counters on the root of the subtree to update the ancestors
-                bubbleUpdate(node._id, node.descendants, node.completeDescendants);
+                bubbleUpdate(node._id, node.descendants + 1, (node.completeDescendants === node.descendants ? node.completeDescendants + 1 : node.completeDescendants));
                 bubbleLevel(parent._id);
             }
         }

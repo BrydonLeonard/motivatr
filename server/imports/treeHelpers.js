@@ -229,13 +229,16 @@ let addLeaf = function(newObj) {
     //TODO test cases for bubbleLevel
 let bubbleLevel = function(_id){
     let currentNode = itemCollection.findOne(_id);
-    for (let childId of currentNode.children){
-        itemCollection.update(childId, {
-            $set: {
-                level: 0
-            }
-        });
-        bubbleLevel(childId);
+    //Just in case the entry doesn't have children defined
+    if (currentNode && currentNode.children && currentNode.children.length > 0) {
+        for (let childId of currentNode.children) {
+            itemCollection.update(childId, {
+                $set: {
+                    level: currentNode.level + 1
+                }
+            });
+            bubbleLevel(childId);
+        }
     }
 }
 

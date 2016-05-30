@@ -358,6 +358,202 @@ describe('Meteor Methods', () => {
 
             expect(itemCollection.find().count()).to.equal(0);
         });
+
+        //The database will be reset before each of these methods and we will add the second test tree in each test case
+        it('can adopt a full tree to a non-root node', () => {
+            let secondTree = resetDB(userId, true);
+
+            let adopt = Meteor.server.method_handlers['adoptChild'];
+            let invocation = { userId };
+
+            adopt.apply(invocation, [secondTree.root, l1]);
+
+            let newParent = itemCollection.findOne(l1);
+            let tree2Root = itemCollection.findOne(secondTree.root);
+            let tree1Root = itemCollection.findOne(root);
+
+            expect(tree2Root.parent).to.equal(l1);
+            expect(newParent.children.length).to.equal(3);
+            expect(tree1Root.descendants).to.equal(7);
+            expect(newParent.descendants).to.equal(6);
+            expect(tree1Root.completeDescendants).to.equal(2);
+            expect(newParent.completeDescendants).to.equal(2);
+            expect(tree2Root.level).to.equal(2);
+        });
+
+        it('can adopt a subtree to a non-root node', () => {
+            let secondTree = resetDB(userId, true);
+
+            let adopt = Meteor.server.method_handlers['adoptChild'];
+            let invocation = { userId };
+
+            adopt.apply(invocation, [secondTree.l1, l1]);
+
+            let newParent = itemCollection.findOne(l1);
+            let tree2Root = itemCollection.findOne(secondTree.root);
+            let subtreeRoot = itemCollection.findOne(secondTree.l1);
+
+            expect(tree2Root.descendants).to.equal(0);
+            expect(tree2Root.completeDescendants).to.equal(0);
+            expect(tree2Root.children.length).to.equal(0);
+
+            expect(subtreeRoot.parent).to.equal(l1);
+            expect(subtreeRoot.level).to.equal(2);
+
+            expect(newParent.descendants).to.equal(5);
+            expect(newParent.completeDescendants).to.equal(2);
+        });
+
+        it('can adopt a single node to a non-root node', () => {
+            let secondTree = resetDB(userId, true);
+
+            let adopt = Meteor.server.method_handlers['adoptChild'];
+            let invocation = { userId };
+
+            adopt.apply(invocation, [secondTree.l2done, l1]);
+
+            let newParent = itemCollection.findOne(l1);
+            let tree2Root = itemCollection.findOne(secondTree.root);
+            let oldParent = itemCollection.findOne(secondTree.l1);
+            let child = itemCollection.findOne(secondTree.l2done);
+
+            expect(newParent.children.length).to.equal(3);
+            expect(newParent.descendants).to.equal(3);
+            expect(newParent.completeDescendants).to.equal(2);
+
+            expect(tree2Root.descendants).to.equal(2);
+            expect(tree2Root.completeDescendants).to.equal(0);
+
+            expect(oldParent.descendants).to.equal(1);
+            expect(oldParent.completeDescendants).to.equal(0);
+            expect(oldParent.children.length).to.equal(1);
+
+            expect(child.parent).to.equal(l1);
+            expect(child.level).to.equal(2);
+        });
+
+        it('can orphan a subtree into a new tree', () => {
+            let secondTree = resetDB(userId, true);
+
+            let adopt = Meteor.server.method_handlers['adoptChild'];
+            let invocation = { userId };
+
+            adopt.apply(invocation, [secondTree.l1, null]);
+
+            let subtreeRoot = itemCollection.findOne(secondTree.l1);
+            let oldParent = itemCollection.findOne(secondTree.root);
+
+            expect(subtreeRoot.level).to.equal(0);
+            expect(subtreeRoot.descendants).to.equal(2);
+            expect(subtreeRoot.parent).to.equal(null);
+
+            expect(oldParent.children.length).to.equal(0);
+            expect(oldParent.descendants).to.equal(0);
+            expect(oldParent.completeDescendants).to.equal(0);
+        });
+
+        it('can orphan a single complete node into a new tree', () => {
+            let secondTree = resetDB(userId, true);
+
+            let adopt = Meteor.server.method_handlers['adoptChild'];
+            let invocation = { userId };
+
+            adopt.apply(invocation, [secondTree.l2done, null]);
+
+            let oldParent = itemCollection.findOne(secondTree.l1);
+            let child = itemCollection.findOne(secondTree.l2done);
+            let tree2Root = itemCollection.findOne(secondTree.root);
+
+            expect(oldParent.children.length).to.equal(1);
+            expect(oldParent.descendants).to.equal(1);
+            expect(oldParent.completeDescendants).to.equal(0);
+
+            expect(child.level).to.equal(0);
+            expect(child.parent).to.equal(null);
+
+            expect(tree2Root.descendants).to.equal(2);
+            expect(tree2Root.completeDescendants).to.equal(0);
+        });
+
+        it('can orphan a single incomplete node into a new tree', () => {
+            let secondTree = resetDB(userId, true);
+
+            let adopt = Meteor.server.method_handlers['adoptChild'];
+            let invocation = { userId };
+
+            adopt.apply(invocation, [secondTree.l2not, null]);
+
+            let oldParent = itemCollection.findOne(secondTree.l1);
+            let child = itemCollection.findOne(secondTree.l2not);
+            let tree2Root = itemCollection.findOne(secondTree.root);
+
+            expect(oldParent.children.length).to.equal(1);
+            expect(oldParent.descendants).to.equal(1);
+            expect(oldParent.completeDescendants).to.equal(1);
+
+            expect(child.level).to.equal(0);
+            expect(child.parent).to.equal(null);
+
+            expect(tree2Root.descendants).to.equal(2);
+            expect(tree2Root.completeDescendants).to.equal(2);
+        });
+
+        it('will throw a is-root error if we attempt to orphan a root node', () => {
+            let adopt = Meteor.server.method_handlers['adoptChild'];
+            let invocation = { userId };
+
+            let adoptMethod = () => {
+                adopt.apply(invocation, [root, null]);
+            };
+
+            expect(adoptMethod).to.throw(Error);
+        });
+
+        it('can adopt a node to a complete parent, causing it to remain complete', () => {
+            let secondTree = resetDB(userId, true);
+
+            itemCollection.remove(l2not);
+            itemCollection.update(l1, {
+                $set:{
+                    descendants:1,
+                    completeDescendants: 1
+                }
+            });
+            itemCollection.update(root, {
+                $set:{
+                    descendants:2,
+                    completeDescendants:2
+                }
+            });
+
+            let adopt = Meteor.server.method_handlers['adoptChild'];
+            let invocation = { userId };
+
+            adopt.apply(invocation, [secondTree.l2done, l1]);
+
+            let rootNode = itemCollection.findOne(root);
+
+            expect(rootNode.descendants).to.equal(3);
+            expect(rootNode.completeDescendants).to.equal(3);
+        });
+
+        it('can adopt a node to a complete parent, causing it to become incomplete', () => {
+            let secondTree = resetDB(userId, true);
+
+            let adopt = Meteor.server.method_handlers['adoptChild'];
+            let invocation = { userId };
+
+            adopt.apply(invocation, [secondTree.root, l2not]);
+
+            let newParent = itemCollection.findOne(l2not);
+            let rootNode = itemCollection.findOne(root);
+
+            expect(newParent.children.length).to.equal(1);
+            expect(newParent.descendants).to.equal(4);
+            expect(newParent.completeDescendants).to.equal(1);
+
+            expect(rootNode.completeDescendants).to.equal(2);
+        });
     });
 
     describe('Repeatable nodes', () => {
@@ -624,202 +820,6 @@ describe('Meteor Methods', () => {
 
             expect(incMeth).to.throw(Error);
             expect(decMeth).to.throw(Error);
-        });
-
-        //The database will be reset before each of these methods and we will add the second test tree in each test case
-        it('can adopt a full tree to a non-root node', () => {
-            let secondTree = resetDB(userId, true);
-
-            let adopt = Meteor.server.method_handlers['adoptChild'];
-            let invocation = { userId };
-
-            adopt.apply(invocation, [secondTree.root, l1]);
-
-            let newParent = itemCollection.findOne(l1);
-            let tree2Root = itemCollection.findOne(secondTree.root);
-            let tree1Root = itemCollection.findOne(root);
-
-            expect(tree2Root.parent).to.equal(l1);
-            expect(newParent.children.length).to.equal(3);
-            expect(tree1Root.descendants).to.equal(7);
-            expect(newParent.descendants).to.equal(6);
-            expect(tree1Root.completeDescendants).to.equal(2);
-            expect(newParent.completeDescendants).to.equal(2);
-            expect(tree2Root.level).to.equal(2);
-        });
-
-        it('can adopt a subtree to a non-root node', () => {
-            let secondTree = resetDB(userId, true);
-
-            let adopt = Meteor.server.method_handlers['adoptChild'];
-            let invocation = { userId };
-
-            adopt.apply(invocation, [secondTree.l1, l1]);
-
-            let newParent = itemCollection.findOne(l1);
-            let tree2Root = itemCollection.findOne(secondTree.root);
-            let subtreeRoot = itemCollection.findOne(secondTree.l1);
-
-            expect(tree2Root.descendants).to.equal(0);
-            expect(tree2Root.completeDescendants).to.equal(0);
-            expect(tree2Root.children.length).to.equal(0);
-
-            expect(subtreeRoot.parent).to.equal(l1);
-            expect(subtreeRoot.level).to.equal(2);
-
-            expect(newParent.descendants).to.equal(5);
-            expect(newParent.completeDescendants).to.equal(2);
-        });
-
-        it('can adopt a single node to a non-root node', () => {
-            let secondTree = resetDB(userId, true);
-
-            let adopt = Meteor.server.method_handlers['adoptChild'];
-            let invocation = { userId };
-
-            adopt.apply(invocation, [secondTree.l2done, l1]);
-
-            let newParent = itemCollection.findOne(l1);
-            let tree2Root = itemCollection.findOne(secondTree.root);
-            let oldParent = itemCollection.findOne(secondTree.l1);
-            let child = itemCollection.findOne(secondTree.l2done);
-
-            expect(newParent.children.length).to.equal(3);
-            expect(newParent.descendants).to.equal(3);
-            expect(newParent.completeDescendants).to.equal(2);
-
-            expect(tree2Root.descendants).to.equal(2);
-            expect(tree2Root.completeDescendants).to.equal(0);
-
-            expect(oldParent.descendants).to.equal(1);
-            expect(oldParent.completeDescendants).to.equal(0);
-            expect(oldParent.children.length).to.equal(1);
-
-            expect(child.parent).to.equal(l1);
-            expect(child.level).to.equal(2);
-        });
-
-        it('can orphan a subtree into a new tree', () => {
-            let secondTree = resetDB(userId, true);
-
-            let adopt = Meteor.server.method_handlers['adoptChild'];
-            let invocation = { userId };
-
-            adopt.apply(invocation, [secondTree.l1, null]);
-
-            let subtreeRoot = itemCollection.findOne(secondTree.l1);
-            let oldParent = itemCollection.findOne(secondTree.root);
-
-            expect(subtreeRoot.level).to.equal(0);
-            expect(subtreeRoot.descendants).to.equal(2);
-            expect(subtreeRoot.parent).to.equal(null);
-
-            expect(oldParent.children).to.equal(0);
-            expect(oldParent.descendants).to.equal(0);
-            expect(oldParent.completeDescendants).to.equal(0);
-        });
-
-        it('can orphan a single complete node into a new tree', () => {
-            let secondTree = resetDB(userId, true);
-
-            let adopt = Meteor.server.method_handlers['adoptChild'];
-            let invocation = { userId };
-
-            adopt.apply(invocation, [secondTree.l2done, null]);
-
-            let oldParent = itemCollection.findOne(secondTree.l1);
-            let child = itemCollection.findOne(secondTree.l2done);
-            let tree2Root = itemCollection.findOne(secondTree.root);
-
-            expect(oldParent.children.length).to.equal(1);
-            expect(oldParent.descendants).to.equal(1);
-            expect(oldParent.completeDescendants).to.equal(0);
-
-            expect(child.level).to.equal(0);
-            expect(child.parent).to.equal(null);
-
-            expect(tree2Root.descendants).to.equal(2);
-            expect(tree2Root.completeDescendants).to.equal(0);
-        });
-
-        it('can orphan a single incomplete node into a new tree', () => {
-            let secondTree = resetDB(userId, true);
-
-            let adopt = Meteor.server.method_handlers['adoptChild'];
-            let invocation = { userId };
-
-            adopt.apply(invocation, [secondTree.l2not, null]);
-
-            let oldParent = itemCollection.findOne(secondTree.l1);
-            let child = itemCollection.findOne(secondTree.l2not);
-            let tree2Root = itemCollection.findOne(secondTree.root);
-
-            expect(oldParent.children.length).to.equal(1);
-            expect(oldParent.descendants).to.equal(1);
-            expect(oldParent.completeDescendants).to.equal(1);
-
-            expect(child.level).to.equal(0);
-            expect(child.parent).to.equal(null);
-
-            expect(tree2Root.descendants).to.equal(2);
-            expect(tree2Root.completeDescendants).to.equal(2);
-        });
-
-        it('will throw a is-root error if we attempt to orphan a root node', () => {
-            let adopt = Meteor.server.method_handlers['adoptChild'];
-            let invocation = { userId };
-
-            let adoptMethod = () => {
-                adopt.apply(invocation, [root, null]);
-            };
-
-            expect(adoptMethod).to.throw(Error);
-        });
-
-        it('can adopt a node to a complete parent, causing it to remain complete', () => {
-            let secondTree = resetDB(userId, true);
-
-            itemCollection.remove(l2not);
-            itemCollection.update(l1, {
-                $set:{
-                    descendants:1,
-                    completeDescendants: 1
-                }
-            });
-            itemCollection.update(root, {
-                $set:{
-                    descendants:2,
-                    completeDescendants:2
-                }
-            });
-
-            let adopt = Meteor.server.method_handlers['adoptChild'];
-            let invocation = { userId };
-
-            adopt.apply(invocation, [secondTree.l2done, l1]);
-
-            let rootNode = itemCollection.findOne(root);
-
-            expect(rootNode.descendants).to.equal(3);
-            expect(rootNode.completeDescendants).to.equal(3);
-        });
-
-        it('can adopt a node to a complete parent, causing it to become incomplete', () => {
-            let secondTree = resetDB(userId, true);
-
-            let adopt = Meteor.server.method_handlers['adoptChild'];
-            let invocation = { userId };
-
-            adopt.apply(invocation, [secondTree.root, l2not]);
-
-            let newParent = itemCollection.findOne(l2not);
-            let rootNode = itemCollection.findOne(root);
-
-            expect(newParent.children.length).to.equal(1);
-            expect(newParent.descendants).to.equal(1);
-            expect(newParent.completeDescendants).to.equal(1);
-
-            expect(rootNode.completeDescendants.to.equal(1));
         });
     });
 
