@@ -1,0 +1,22 @@
+<template name="relocateModal">
+    <div id="relocateModal" class="modal">
+        <div class="modal-content">
+            <h4>Move item to:</h4>
+            <div class="row">
+                <div class="collection">
+                    {{#each siblings}}
+                        <a href="#!" class="collection-item sibling-button" id="{{_id}}">{{name}}</a>
+                    {{/each}}
+                </div>
+            </div>
+            {{#if hasParent}}
+            <div class="row">
+                <button class="waves-effect waves-light btn spread-button" id="levelUp">Move 1 level up</button>
+            </div>
+            {{/if}}
+            <div class="row">
+                <button class="waves-effect waves-light btn spread-button" id="cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+</template>

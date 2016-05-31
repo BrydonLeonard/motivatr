@@ -543,17 +543,36 @@ describe('Meteor Methods', () => {
             let adopt = Meteor.server.method_handlers['adoptChild'];
             let invocation = { userId };
 
-            adopt.apply(invocation, [secondTree.root, l2not]);
+            adopt.apply(invocation, [secondTree.root, l2done]);
 
-            let newParent = itemCollection.findOne(l2not);
+            let newParent = itemCollection.findOne(l2done);
             let rootNode = itemCollection.findOne(root);
 
             expect(newParent.children.length).to.equal(1);
             expect(newParent.descendants).to.equal(4);
             expect(newParent.completeDescendants).to.equal(1);
 
-            expect(rootNode.completeDescendants).to.equal(2);
+            expect(rootNode.completeDescendants).to.equal(1);
         });
+
+        it('can adopt a single incomplete node to a complete leaf node, causing it to become incomplete', () => {
+            let adopt = Meteor.server.method_handlers['adoptChild'];
+            let invocation = { userId };
+
+            adopt.apply(invocation, [l2not, l2done]);
+
+            let rootNode = itemCollection.findOne(root);
+            let l2doneNode = itemCollection.findOne(l2done);
+            let l2notNode = itemCollection.findOne(l2not);
+
+            expect(rootNode.completeDescendants).to.equal(0);
+            expect(rootNode.descendants).to.equal(3);
+
+            expect(l2doneNode.descendants).to.equal(1);
+            expect(l2doneNode.completeDescendants).to.equal(0);
+
+            expect(l2notNode.done).to.equal(false);
+        })
     });
 
     describe('Repeatable nodes', () => {

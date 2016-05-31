@@ -453,7 +453,28 @@ Meteor.methods({
                 });
 
                 //We can use the counters on the root of the subtree to update the ancestors
-                bubbleUpdate(node._id, node.descendants + 1, (node.completeDescendants === node.descendants ? node.completeDescendants + 1 : node.completeDescendants));
+                let completeUpdate = 0;
+                if (node.descendants > 0){
+                    completeUpdate += node.completeDescendants;
+                    if (node.descendants === node.completeDescendants){
+                        completeUpdate += 1;
+                    }
+                } else {
+                    if (node.done){
+                        completeUpdate += 1;
+                    }
+                }
+
+                if (parent.done){
+                    itemCollection.update(parent._id, {
+                        $set: {
+                            done: false
+                        }
+                    });
+                    bubbleComplete(parent._id, -1);
+                }
+
+                bubbleUpdate(node._id, node.descendants + 1, completeUpdate);
                 bubbleLevel(parent._id);
             }
         }
