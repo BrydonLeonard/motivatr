@@ -7,6 +7,7 @@ import { Meteor } from 'meteor/meteor';
 //Modals
 import * as newItemModal from '../modals/newItemModal';
 import * as confirmModal from '../modals/confirmModal';
+import * as relocateModal from '../modals/relocateModal';
 
 //Template
 import './menu.html';
@@ -35,6 +36,7 @@ Template.todoContainer.onCreated(function(){
     Meteor.subscribe('itemCollection');
     newItemModal.addToTemplate($('body')[0]);
     confirmModal.addToTemplate($('body')[0]);
+    relocateModal.addToTemplate($('body')[0]);
     initAnimations();
     bounce = new Bounce();
     bounce.scale({
@@ -174,6 +176,57 @@ Template.todoContainer.events({
                 Meteor.call('decreaseReps', thisItem._id);
             }
         }
+    },
+    'click #relocate':function(event){
+        event.preventDefault();
+
+        //The node that we'll be moving
+        let thisItem = itemCollection.findOne(Session.get('selectedItem'));
+        let currentNode = {
+            name: thisItem.name,
+            _id: thisItem._id
+        };
+
+        //The parent of the node we'll be moving
+        let activeItem = itemCollection.findOne(Session.get('activeItem'));
+
+        //Actually refers to the grandparent of the node we're moving
+        let parentNode = null;
+
+        //If we aren't at the root
+        if (activeItem != null) {
+            parentNode = {
+                name: activeItem.name,
+                _id: activeItem._id,
+                grandparent: activeItem.parent //This is where we would move the node
+            };
+        } else {
+            //If we're already at the root, then send a null _id
+            parentNode = {
+                _id: null,
+                grandparent: null
+            }
+        }
+
+        //Siblings of the node we're moving. Children of the active node
+        let siblingNodes = [];
+        if (activeItem != null){
+            for (let child of activeItem.children){
+                let childItem = itemCollection.findOne(child);
+                siblingNodes.push({
+                    name: childItem.name,
+                    _id: childItem._id
+                });
+            }
+        } else { // For when we're at the root
+            itemCollection.find({level: 0}).forEach(function(item){
+                siblingNodes.push({
+                    name: item.name,
+                    _id: item._id
+                });
+            });
+        }
+        relocateModal.displayModal({ currentNode, parentNode, siblingNodes });
     }
 });
 
