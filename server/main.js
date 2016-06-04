@@ -136,8 +136,9 @@ Meteor.methods({
                 }
 
                 //Check name
+                //If they somehow send us a name longer than 50, just chop it down
                 check(props.name, String);
-                newObj.name = props.name + (duplicates > 1 ? ' (' + (i+1) + ')' : '');
+                newObj.name = (props.name + (duplicates > 1 ? ' (' + (i+1) + ')' : '')).slice(0, Meteor.settings.public.maxNameLength);
 
                 //Check priority
                 if (props.priority) {

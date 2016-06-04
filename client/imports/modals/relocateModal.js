@@ -3,6 +3,7 @@ import './relocateModal.html';
 let siblings = [];
 let parent = {};
 let currentNode = {};
+let callback = null;
 
 let openDep = new Tracker.Dependency;
 
@@ -35,6 +36,9 @@ let displayModal = function(params){
     parent = params.parentNode;
     currentNode = params.currentNode;
     siblings = params.siblingNodes;
+    if (params.callback){
+        callback = params.callback;
+    }
     openDep.changed();
     $('#relocateModal').openModal();
 };
@@ -63,6 +67,9 @@ Template.relocateModal.events({
         event.preventDefault();
         Meteor.call('adoptChild', currentNode._id, event.target.id);
         $('#relocateModal').closeModal();
+        if (callback){
+            callback();
+        }
     },
     'click #cancel':function(){
         $('#relocateModal').closeModal();
@@ -71,6 +78,10 @@ Template.relocateModal.events({
         event.preventDefault();
         Meteor.call('adoptChild', currentNode._id, parent.grandparent);
         $('#relocateModal').closeModal();
+        if (callback){
+            callback();
+        }
+
     }
 });
 
