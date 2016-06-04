@@ -111,10 +111,15 @@ body, html{
     min-height: 65px !important;
 }
 
-/*NewItemModal needs some space around the slider*/
+/* NewItemModal needs some space around the slider*/
 .newItemModalSlider{
     margin-top:20px;
     margin-bottom:20px;
+}
+
+/* This fixed error messages on inputs */
+label[data-error]:after {
+    white-space: nowrap;
 }
 
 

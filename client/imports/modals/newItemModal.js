@@ -20,46 +20,46 @@ Template.newItemModal.events({
      */
     'submit #newItemForm': function (event) {
         event.preventDefault();
-
-        let newObj = {};
-
-        let date;
-        if ($('#hasDate')[0].checked){
-            if ($('#dateLimit').val() != ''){
-                newObj.date = $('#dateLimit').val();
+        if (!$(event.currentTarget.itemName).hasClass('invalid')) {
+            let newObj = {};
+            /* Commented out until we actually find a use for this stuff
+            let date;
+            if ($('#hasDate')[0].checked) {
+                if ($('#dateLimit').val() != '') {
+                    newObj.date = $('#dateLimit').val();
+                } else {
+                    date = null;
+                }
             } else {
                 date = null;
             }
-        } else {
-            date = null;
-        }
 
-        if ($('#hasPriority')[0].checked){
-            newObj.priority = Number($('#priority').val());
-        }
-
-        if ($('#hasIterable')[0].checked){
-            newObj.repeatable = true;
-            if ($('#hasIterableLimit')[0].checked){
-                newObj.repeatableLimit = Number($('#iterableLimit').val());
+            if ($('#hasPriority')[0].checked) {
+                newObj.priority = Number($('#priority').val());
             }
-        }
 
-
-        newObj.parentId = data.parent;
-        newObj.name = event.target.itemName.value;
-
-        if ($('#hasDuplicates')[0].checked) {
-            newObj.duplicates = $('#duplicates').val();
-        }
-
-        Meteor.call('addChild', newObj, function(e){
-            if (data.callback) {
-                data.callback(e);
-                $('#newItemModal').closeModal();
+            if ($('#hasIterable')[0].checked) {
+                newObj.repeatable = true;
+                if ($('#hasIterableLimit')[0].checked) {
+                    newObj.repeatableLimit = Number($('#iterableLimit').val());
+                }
             }
-        });
+            */
 
+            newObj.parentId = data.parent;
+            newObj.name = event.target.itemName.value;
+
+            if ($('#hasDuplicates')[0].checked) {
+                newObj.duplicates = $('#duplicates').val();
+            }
+
+            Meteor.call('addChild', newObj, function (e) {
+                if (data.callback) {
+                    data.callback(e);
+                    $('#newItemModal').closeModal();
+                }
+            });
+        }
     },
     /**
      * Triggers the checkBoxDep to update the datepicker
@@ -127,6 +127,9 @@ Template.newItemModal.helpers({
             { value:2, colour: 'green', text: 'Medium priority'},
             { value:3, colour: 'red', text: 'High priority'}
         ]
+    },
+    'nameLength':function(){
+        return Meteor.settings.public.maxNameLength;
     }
 });
 
@@ -139,6 +142,7 @@ Template.newItemModal.helpers({
  */
 let displayModal = function(parent, callback){
     $('#newItemModal').openModal();
+
     $('#hasDate').attr('checked', false);
     checkBoxDep.changed();
     $('#itemName').val('');
@@ -156,6 +160,9 @@ let displayModal = function(parent, callback){
  */
 let addToTemplate = function(parentNode){
     Blaze.render(Template.newItemModal, parentNode);
+
+    //Character counter needs to be initialized
+    $('#itemName').characterCounter();
 };
 
 

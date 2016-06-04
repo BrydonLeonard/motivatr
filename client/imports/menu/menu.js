@@ -95,6 +95,16 @@ Template.todoContainer.events({
         Meteor.call('toggleComplete', Session.get('selectedItem'));
     },
     /**
+     * Allows users to click the icon to toggle completion
+     * @param event
+     */
+    'click i':function(event){
+        event.preventDefault();
+        if (!selectedHasChildren()){
+            Meteor.call('toggleComplete', Session.get('selectedItem'));
+        }
+    },
+    /**
      * Remove item button is clicked
      * @param event
      */
@@ -226,7 +236,10 @@ Template.todoContainer.events({
                 });
             });
         }
-        relocateModal.displayModal({ currentNode, parentNode, siblingNodes });
+        relocateModal.displayModal({ currentNode, parentNode, siblingNodes, callback: function(){
+                goBack();
+            }
+        });
     }
 });
 
@@ -416,6 +429,7 @@ Template.itemTemp.events({
             }
             Tracker.afterFlush(function(){
                 bounceSpinFab();
+                openFab();
             });
         } else if (Session.get('selectedItem') == this._id){
             //We selected the already selected one
@@ -425,6 +439,7 @@ Template.itemTemp.events({
                 closeFab();
                 Tracker.afterFlush(function(){
                     bounceSpinFab();
+                    openFab();
                 });
             }
         } else {
