@@ -42,6 +42,13 @@ header, main, footer, body {
     text-align:center;
 }
 
+/* The version number next to the main heading */
+.version-number{
+    display:inline;
+    padding-left:0;
+    margin-left:-20px;
+}
+
 /* buttons that fill their container */
 .spread-button{
     width:100%;
@@ -73,7 +80,7 @@ header, main, footer, body {
     box-shadow: 0 1px 0 0 #F44336;
 }
 
-/*Disable DOM selection*/
+/* Disable DOM selection */
 html{
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -83,17 +90,27 @@ html{
     user-select: none;
 }
 
-/*For when there are changes to the menu*/
+/* Allows selection in the tree export modal */
+.tree-export-text {
+    -webkit-touch-callout: text;
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+/* For when there are changes to the menu */
 .orange-fab {
     background-color:#ffb74d;
 }
 
-/*To resize the body for tree displays*/
+/* To resize the body for tree displays */
 body, html{
     height:100%;
 }
 
-/*Resize for tree display*/
+/* Resize for tree display */
 #chart_div {
     overflow-y:hidden;
     width: 100%;
@@ -101,12 +118,12 @@ body, html{
     display: block;
 }
 
-/*Make mouse change to hand over itemLink elements */
+/* Make mouse change to hand over itemLink elements */
 .itemLink{
     cursor: pointer;
 }
 
-/*Allow for smaller items in menu view */
+/* Allow for smaller items in menu view */
 .collection-item.avatar{
     min-height: 65px !important;
 }
