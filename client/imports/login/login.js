@@ -37,3 +37,9 @@ Template.login.events({
         });
     }
 });
+
+Template.login.helpers({
+    'version':function(){
+        return Meteor.settings.public.version;
+    }
+});

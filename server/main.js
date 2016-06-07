@@ -8,6 +8,7 @@ import * as Check from './imports/check';
 import { bubbleComplete, bubbleRemove, sinkRemove,  bubbleAdd, bubbleUpdate, addLeaf, removeLeaf, bubbleLevel } from './imports/treeHelpers';
 import { initServices } from './imports/services';
 import moment from 'moment';
+import * as serializer from './imports/serializer';
 
 Meteor.startup(() => {
     initServices();
@@ -478,6 +479,29 @@ Meteor.methods({
                 bubbleUpdate(node._id, node.descendants + 1, completeUpdate);
                 bubbleLevel(parent._id);
             }
+        }
+    },
+    /**
+     * Serializes a tree and returns the string
+     * @param tree The root of the tree to serialize
+     */
+    'exportTree':function(tree){
+        let userId = this.userId;
+        if (userId) {
+            check(tree, String);
+            return serializer.serializeTree(tree);
+        }
+    },
+    /**
+     * Imports a tree, given a string of a serialized tree and a parent
+     * If the parent omitted will import as a root
+     * @param treeString The serialized tree
+     * @param parent The parent of the tree
+     */
+    'importTree':function(treeString, parent){
+        if (this.userId) {
+            check(treeString, String);
+            serializer.deserializeTree(treeString, parent ? parent : null, this.userId);
         }
     }
 });

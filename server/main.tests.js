@@ -572,7 +572,40 @@ describe('Meteor Methods', () => {
             expect(l2doneNode.completeDescendants).to.equal(0);
 
             expect(l2notNode.done).to.equal(false);
-        })
+        });
+
+        it('will correctly throw an exception if import of tree fails', () => {
+            let importMethod = Meteor.server.method_handlers['importTree'];
+            let invocation = { userId };
+
+            let failMethod = function(){
+                importMethod.apply(invocation, 'asfasf', 'asfasf');
+            }
+
+            expect(failMethod).to.throw(Error);
+        });
+
+        //The serialization methods don't really change much in Meteor.methods
+        //This is just to check auth
+        it('will block a user without auth from adding a tree', () => {
+            let importMethod = Meteor.server.method_handlers['importTree'];
+            let invocation = { userId: 20 };
+
+            let failMethod = function(){
+                importMethod.apply(invocation, 'asfasf', 'asfasf');
+            };
+
+            expect(failMethod).to.throw(Error);
+        });
+
+        it('will block a user from trying to export a tree they don\'t own', () => {
+            let exportMethod = Meteor.server.method_handlers['exportTree'];
+            let invocation = { userId: 20 };
+
+            let failMethod = function(){
+                exportMethod.apply(invocation, l1);
+            }
+        });
     });
 
     describe('Repeatable nodes', () => {

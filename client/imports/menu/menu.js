@@ -8,6 +8,7 @@ import { Meteor } from 'meteor/meteor';
 import * as newItemModal from '../modals/newItemModal';
 import * as confirmModal from '../modals/confirmModal';
 import * as relocateModal from '../modals/relocateModal';
+import * as infoModal from '../modals/infoModal';
 
 //Template
 import './menu.html';
@@ -37,6 +38,7 @@ Template.todoContainer.onCreated(function(){
     newItemModal.addToTemplate($('body')[0]);
     confirmModal.addToTemplate($('body')[0]);
     relocateModal.addToTemplate($('body')[0]);
+    infoModal.addToTemplate($('body')[0]);
     initAnimations();
     bounce = new Bounce();
     bounce.scale({
@@ -98,7 +100,7 @@ Template.todoContainer.events({
      * Allows users to click the icon to toggle completion
      * @param event
      */
-    'click i':function(event){
+    'click .itemLink > i':function(event){
         event.preventDefault();
         if (!selectedHasChildren()){
             Meteor.call('toggleComplete', Session.get('selectedItem'));
@@ -136,8 +138,6 @@ Template.todoContainer.events({
                 }
             });
         }
-
-
     },
     'click #splitChild':function(event){
         event.preventDefault();
@@ -162,6 +162,15 @@ Template.todoContainer.events({
             closeFab();
             Tracker.afterFlush(function(){
                 bounceSpinFab();
+            });
+        }
+    },
+    'click #export':function(event){
+        event.preventDefault();
+        if (Session.get('selectedItem')){
+            //TODO get some caching going on here in case they repeatedly ask for the same tree
+            Meteor.call('exportTree', Session.get('selectedItem'), function(e,treeString) {
+                infoModal.displayModal(treeString, 'Your tree string:');
             });
         }
     },
