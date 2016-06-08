@@ -20,46 +20,58 @@ Template.newItemModal.events({
      */
     'submit #newItemForm': function (event) {
         event.preventDefault();
+        if (!$(event.currentTarget.itemName).hasClass('invalid')) {
+            let newObj = {};
+            /* Commented out until we actually find a use for this stuff
+             let date;
+             if ($('#hasDate')[0].checked) {
+             if ($('#dateLimit').val() != '') {
+             newObj.date = $('#dateLimit').val();
+             } else {
+             date = null;
+             }
+             } else {
+             date = null;
+             }
 
-        let newObj = {};
+             if ($('#hasPriority')[0].checked) {
+             newObj.priority = Number($('#priority').val());
+             }
 
-        let date;
-        if ($('#hasDate')[0].checked){
-            if ($('#dateLimit').val() != ''){
-                newObj.date = $('#dateLimit').val();
+             if ($('#hasIterable')[0].checked) {
+             newObj.repeatable = true;
+             if ($('#hasIterableLimit')[0].checked) {
+             newObj.repeatableLimit = Number($('#iterableLimit').val());
+             }
+             }
+             */
+
+            newObj.parentId = data.parent;
+
+            /*if ($('#hasDuplicates')[0].checked) {
+             newObj.duplicates = $('#duplicates').val();
+             }*/
+
+            if ($('#importTree')[0].checked) {
+                let treeString = event.target.treeString.value;
+                console.log(treeString);
+                Meteor.call('importTree', treeString, data.parent, function(e){
+                    console.log(e);
+                    if (e){
+                        Materialize.toast("Tree couldn't be built");
+                    }
+                    $('#newItemModal').closeModal();
+                });
             } else {
-                date = null;
-            }
-        } else {
-            date = null;
-        }
-
-        if ($('#hasPriority')[0].checked){
-            newObj.priority = Number($('#priority').val());
-        }
-
-        if ($('#hasIterable')[0].checked){
-            newObj.repeatable = true;
-            if ($('#hasIterableLimit')[0].checked){
-                newObj.repeatableLimit = Number($('#iterableLimit').val());
+                newObj.name = event.target.itemName.value;
+                Meteor.call('addChild', newObj, function (e) {
+                    if (data.callback) {
+                        data.callback(e);
+                        $('#newItemModal').closeModal();
+                    }
+                });
             }
         }
-
-
-        newObj.parentId = data.parent;
-        newObj.name = event.target.itemName.value;
-
-        if ($('#hasDuplicates')[0].checked) {
-            newObj.duplicates = $('#duplicates').val();
-        }
-
-        Meteor.call('addChild', newObj, function(e){
-            if (data.callback) {
-                data.callback(e);
-                $('#newItemModal').closeModal();
-            }
-        });
-
     },
     /**
      * Triggers the checkBoxDep to update the datepicker
@@ -77,6 +89,9 @@ Template.newItemModal.events({
         checkBoxDep.changed();
     },
     'change #hasIterableLimit':function(){
+        checkBoxDep.changed();
+    },
+    'change #importTree':function(){
         checkBoxDep.changed();
     }
 });
@@ -121,12 +136,27 @@ Template.newItemModal.helpers({
         let value = $('#hasIterableLimit')[0] ? $('#hasIterableLimit')[0].checked : false;
         return value;
     },
+    importTree:function(){
+        checkBoxDep.depend();
+        let value = $('#importTree')[0] ? $('#importTree')[0].checked : false;
+        return value;
+    },
     options: function(){
         return [
             { value:1, colour: 'blue', text: 'Low priority'},
             { value:2, colour: 'green', text: 'Medium priority'},
             { value:3, colour: 'red', text: 'High priority'}
         ]
+    },
+    'nameLength':function(){
+        return Meteor.settings.public.maxNameLength;
+    },
+    'initCounter':function(){
+        //Character counter needs to be initialized
+        Tracker.afterFlush(function() {
+            $('#newItemInput > .character-counter').remove();
+            $('#itemName').characterCounter();
+        });
     }
 });
 
@@ -139,6 +169,7 @@ Template.newItemModal.helpers({
  */
 let displayModal = function(parent, callback){
     $('#newItemModal').openModal();
+
     $('#hasDate').attr('checked', false);
     checkBoxDep.changed();
     $('#itemName').val('');

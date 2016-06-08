@@ -1,6 +1,6 @@
 import { expect } from 'meteor/practicalmeteor:chai';
 import { itemCollection } from './dbSetup';
-import { progress, bubbleComplete, bubbleRemove, sinkRemove, bubbleAdd, addLeaf, removeLeaf } from './treeHelpers';
+import { progress, bubbleComplete, bubbleRemove, sinkRemove, bubbleAdd, addLeaf, removeLeaf, bubbleLevel } from './treeHelpers';
 
 describe('treeHelpers', () => {
     describe('helpers', () => {
@@ -268,6 +268,27 @@ describe('treeHelpers', () => {
 
             expect(grandparent.completeDescendants).to.equal(1);
             expect(grandparent.descendants).to.equal(4);
+        });
+
+        it('can bubble update the level of child nodes', () => {
+            itemCollection.update({_id: {
+                $in: [l1, l2not, l2done]
+                }
+            }, {
+                $set: {
+                    level: 0
+                }
+            });
+
+            bubbleLevel(root);
+
+            let l1node = itemCollection.findOne(l1);
+            let l2node1 = itemCollection.findOne(l2done);
+            let l2node2 = itemCollection.findOne(l2not);
+
+            expect(l1node.level).to.equal(1);
+            expect(l2node1.level).to.equal(2);
+            expect(l2node2.level).to.equal(2);
         });
     });
 });

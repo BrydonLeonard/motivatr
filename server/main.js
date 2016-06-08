@@ -5,9 +5,10 @@ import { completeClass, getVisChildren } from './imports/visTreeHelpers';
 import { completeLabel, getDesktopChildren } from './imports/desktopTreeHelpers';
 import * as Errors from './imports/errors';
 import * as Check from './imports/check';
-import { bubbleComplete, bubbleRemove, sinkRemove,  bubbleAdd, bubbleUpdate, addLeaf, removeLeaf } from './imports/treeHelpers';
+import { bubbleComplete, bubbleRemove, sinkRemove,  bubbleAdd, bubbleUpdate, addLeaf, removeLeaf, bubbleLevel } from './imports/treeHelpers';
 import { initServices } from './imports/services';
 import moment from 'moment';
+import * as serializer from './imports/serializer';
 
 Meteor.startup(() => {
     initServices();
@@ -136,8 +137,9 @@ Meteor.methods({
                 }
 
                 //Check name
+                //If they somehow send us a name longer than 50, just chop it down
                 check(props.name, String);
-                newObj.name = props.name + (duplicates > 1 ? ' (' + (i+1) + ')' : '');
+                newObj.name = (props.name + (duplicates > 1 ? ' (' + (i+1) + ')' : '')).slice(0, Meteor.settings.public.maxNameLength);
 
                 //Check priority
                 if (props.priority) {
@@ -334,7 +336,18 @@ Meteor.methods({
             } else {
                 //We are requested to remove an internal node
                 //Remove the nodes from the ancestor's counters
-                bubbleUpdate(node._id, -node.descendants - 1, -node.completeDescendants + (node.descendants === node.completeDescendants ? -1 : 0));
+                let completeUpdate = 0;
+                if (node.descendants > 0){
+                    completeUpdate -= node.completeDescendants;
+                    if (node.descendants === node.completeDescendants){
+                        completeUpdate -= 1;
+                    }
+                } else {
+                    if (node.done){
+                        completeUpdate -= 1;
+                    }
+                }
+                bubbleUpdate(node._id, -node.descendants - 1, completeUpdate);
                 //Physically remove child nodes
                 sinkRemove(node._id);
                 //Add the node back to fix the tree
@@ -366,6 +379,129 @@ Meteor.methods({
             node = Check.nodePermissions(userId, _id, node);
 
             sinkRemove(_id);
+        }
+    },
+    /**
+     * Moves a subtree to be a child of the given node
+     * If the parent node is null, the subtree will be made into a new root node
+     * @param rootId The id of the root of the subtree to be moved
+     * @param parentId The id of the new parent of the root of the subtree
+     */
+    //TODO: Tests for adoptChild
+    adoptChild: function(rootId, parentId){
+        let userId = this.userId;
+        if (userId){
+            check(rootId, String);
+
+            let parent = null;
+
+            if (parentId != null){
+                parent = Check.nodeExists(userId, parentId);
+                parent = Check.nodePermissions(userId, parentId, parent);
+            }
+
+            let node = Check.nodeExists(userId, rootId);
+            node = Check.nodePermissions(userId, rootId, node);
+
+            if (node.parent === null && parentId === null){
+                throw new Meteor.Error('is-root', 'This node is a root node');
+            }
+
+            //We need to update the ancestors of the node we're about to move
+            let completeUpdate = 0;
+            if (node.descendants > 0){
+                completeUpdate -= node.completeDescendants;
+                if (node.descendants === node.completeDescendants){
+                    completeUpdate -= 1;
+                }
+            } else {
+                if (node.done){
+                    completeUpdate -= 1;
+                }
+            }
+
+            bubbleUpdate(node._id, -node.descendants - 1, completeUpdate);
+
+            //The add/remove fix
+            //TODO: implement a more efficient way of doing this
+            bubbleAdd(node._id);
+            bubbleRemove(node._id);
+
+            itemCollection.update(node.parent, {
+                $pull: {
+                    children: node._id
+                }
+            });
+            //We've finished fixing the old ancestors
+
+            if (parent === null){
+                itemCollection.update(node._id, {
+                    $set: {
+                        parent: null,
+                        level: 0
+                    }
+                });
+            } else {
+                itemCollection.update(parent._id, {
+                    $push: {
+                        children: node._id
+                    }
+                });
+
+                itemCollection.update(node._id, {
+                    $set: {
+                        parent: parent._id
+                    }
+                });
+
+                //We can use the counters on the root of the subtree to update the ancestors
+                let completeUpdate = 0;
+                if (node.descendants > 0){
+                    completeUpdate += node.completeDescendants;
+                    if (node.descendants === node.completeDescendants){
+                        completeUpdate += 1;
+                    }
+                } else {
+                    if (node.done){
+                        completeUpdate += 1;
+                    }
+                }
+
+                if (parent.done){
+                    itemCollection.update(parent._id, {
+                        $set: {
+                            done: false
+                        }
+                    });
+                    bubbleComplete(parent._id, -1);
+                }
+
+                bubbleUpdate(node._id, node.descendants + 1, completeUpdate);
+                bubbleLevel(parent._id);
+            }
+        }
+    },
+    /**
+     * Serializes a tree and returns the string
+     * @param tree The root of the tree to serialize
+     */
+    'exportTree':function(tree){
+        let userId = this.userId;
+        if (userId) {
+            check(tree, String);
+            return serializer.serializeTree(tree);
+        }
+    },
+    /**
+     * Imports a tree, given a string of a serialized tree and a parent
+     * If the parent omitted will import as a root
+     * @param treeString The serialized tree
+     * @param parent The parent of the tree
+     */
+    'importTree':function(treeString, parent){
+        if (this.userId) {
+            check(treeString, String);
+            serializer.deserializeTree(treeString, parent ? parent : null, this.userId);
         }
     }
 });

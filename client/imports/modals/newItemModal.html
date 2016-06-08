@@ -3,10 +3,21 @@
         <div class="modal-content">
             <h4>Add a new item</h4>
             <form id="newItemForm">
-                <div class="input-field">
-                    <input id="itemName" type="text" class="validate" required>
-                    <label for="itemName">New Item Name</label>
+                <div class="input-field" id="newItemInput">
+                    {{#if importTree}}
+                        <input id="treeString" type="text" class="validate" required>
+                        <label for="treeString">Tree String</label>
+                    {{else}}
+                        <input id="itemName" type="text" class="validate" length="{{nameLength}}"  required>
+                        <label for="itemName" data-error="Max 50 characters">New Item Name</label>
+                        {{initCounter}}
+                    {{/if}}
                 </div>
+                <p>
+                    <input type="checkbox" id="importTree">
+                    <label for="importTree">Import tree?</label>
+                </p>
+                <!-- Leave this commented until we actually do something with it
                 <p>
                     <input type="checkbox" id="hasDate">
                     <label for="hasDate">Has a date limit</label>
@@ -25,7 +36,8 @@
                     <p class="range-field newItemModalSlider">
                         <input name="priority" type="range" id="priority" min="0" max="3" default="0">
                     </p>
-                {{/if}}
+                {{/if}}-->
+                <!-- Don't know if this stuff is really necessary
                 <p>
                     <input type="checkbox" id="hasDuplicates">
                     <label for="hasDuplicates">Add multiple?</label>
@@ -34,26 +46,8 @@
                     <p class="range-field newItemModalSlider">
                         <input name="duplicates" type="range" id="duplicates" min="1" max="10" default="0">
                     </p>
-                {{/if}}
-                <p>
-                    <input type="checkbox" id="hasIterable">
-                    <label for="hasIterable">Is repeatable?</label>
-                </p>
-                {{#if hasIterable}}
-                    <blockquote>
-                        <p>
-                            <input type="checkbox" id="hasIterableLimit">
-                            <label for="hasIterableLimit">Has a maximum number of repeats?</label>
-                        </p>
-                        {{#if hasIterableLimit}}
-                            <div class="input-field">
-                                <input id="iterableLimit" type="number" class="validate" required>
-                                <label for="iterableLimit">Number of iterations</label>
-                            </div>
-                        {{/if}}
-                    </blockquote>
-                {{/if}}
-                <button class="waves-effect waves-light btn spread-button">add item</button>
+                {{/if}}-->
+                <button type="submit" class="waves-effect waves-light btn spread-button">add item</button>
             </form>
         </div>
     </div>
