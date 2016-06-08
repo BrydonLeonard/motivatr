@@ -58,7 +58,7 @@ Template.newItemModal.events({
                 Meteor.call('importTree', treeString, data.parent, function(e){
                     console.log(e);
                     if (e){
-                        Materialize.toast("Tree couldn't be built");
+                        Materialize.toast("Tree couldn't be built", 4000);
                     }
                     $('#newItemModal').closeModal();
                 });

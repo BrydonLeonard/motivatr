@@ -9,6 +9,7 @@ import * as newItemModal from '../modals/newItemModal';
 import * as confirmModal from '../modals/confirmModal';
 import * as relocateModal from '../modals/relocateModal';
 import * as infoModal from '../modals/infoModal';
+import * as editModal from '../modals/editModal';
 
 //Template
 import './menu.html';
@@ -39,6 +40,7 @@ Template.todoContainer.onCreated(function(){
     confirmModal.addToTemplate($('body')[0]);
     relocateModal.addToTemplate($('body')[0]);
     infoModal.addToTemplate($('body')[0]);
+    editModal.addToTemplate($('body')[0]);
     initAnimations();
     bounce = new Bounce();
     bounce.scale({
@@ -72,7 +74,7 @@ Template.todoContainer.events({
         let activeId = Session.get('activeItem') ? Session.get('activeItem') : null;
         newItemModal.displayModal(activeId, function(e){
             if (e){
-                Materialize.toast('Something went wrong');
+                Materialize.toast('Something went wrong', 4000);
             }
         });
     },
@@ -143,7 +145,7 @@ Template.todoContainer.events({
         event.preventDefault();
         newItemModal.displayModal(Session.get('selectedItem'), function(e){
             if (e){
-                Materialize.toast("Something went wrong");
+                Materialize.toast("Something went wrong", 4000);
             } else {
                 let moveTo = itemCollection.findOne(Session.get('selectedItem'));
                 goToChild(moveTo._id, moveTo.name);
@@ -196,59 +198,9 @@ Template.todoContainer.events({
             }
         }
     },
-    'click #relocate':function(event){
+    'click #edit':function(event){
         event.preventDefault();
-
-        //The node that we'll be moving
-        let thisItem = itemCollection.findOne(Session.get('selectedItem'));
-        let currentNode = {
-            name: thisItem.name,
-            _id: thisItem._id
-        };
-
-        //The parent of the node we'll be moving
-        let activeItem = itemCollection.findOne(Session.get('activeItem'));
-
-        //Actually refers to the grandparent of the node we're moving
-        let parentNode = null;
-
-        //If we aren't at the root
-        if (activeItem != null) {
-            parentNode = {
-                name: activeItem.name,
-                _id: activeItem._id,
-                grandparent: activeItem.parent //This is where we would move the node
-            };
-        } else {
-            //If we're already at the root, then send a null _id
-            parentNode = {
-                _id: null,
-                grandparent: null
-            }
-        }
-
-        //Siblings of the node we're moving. Children of the active node
-        let siblingNodes = [];
-        if (activeItem != null){
-            for (let child of activeItem.children){
-                let childItem = itemCollection.findOne(child);
-                siblingNodes.push({
-                    name: childItem.name,
-                    _id: childItem._id
-                });
-            }
-        } else { // For when we're at the root
-            itemCollection.find({level: 0}).forEach(function(item){
-                siblingNodes.push({
-                    name: item.name,
-                    _id: item._id
-                });
-            });
-        }
-        relocateModal.displayModal({ currentNode, parentNode, siblingNodes, callback: function(){
-                goBack();
-            }
-        });
+        editModal.displayModal(Session.get('selectedItem'), Session.get('activeItem'));
     }
 });
 

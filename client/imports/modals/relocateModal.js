@@ -39,6 +39,9 @@ let displayModal = function(params){
     if (params.callback){
         callback = params.callback;
     }
+    //The node itself will actually form part of the sibling array initially
+    let selfIndex = siblings.indexOf(currentNode);
+    siblings.splice(selfIndex, 1);
     openDep.changed();
     $('#relocateModal').openModal();
 };
