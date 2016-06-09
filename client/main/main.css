@@ -134,6 +134,15 @@ body, html{
     margin-bottom:20px;
 }
 
+/* Removes some of the padding in the edit modal */
+#editModal > .modal-content{
+    padding-bottom:0;
+}
+
+.bottom-row{
+    margin-bottom:0;
+}
+
 /* This fixed error messages on inputs */
 label[data-error]:after {
     white-space: nowrap;

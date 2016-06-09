@@ -389,6 +389,9 @@ Meteor.methods({
      */
     //TODO: Tests for adoptChild
     adoptChild: function(rootId, parentId){
+        if (rootId == parentId){
+            throw new Meteor.Error("adopt-self", 'A node cannot adopt itself');
+        }
         let userId = this.userId;
         if (userId){
             check(rootId, String);
@@ -502,6 +505,27 @@ Meteor.methods({
         if (this.userId) {
             check(treeString, String);
             serializer.deserializeTree(treeString, parent ? parent : null, this.userId);
+        }
+    },
+    /**
+     * Renames a node
+     * @param nodeId The node ID
+     * @param newName The new name of the node
+     */
+    'rename':function(nodeId, newName){
+        let userId = this.userId;
+        if (userId){
+            check(nodeId, String);
+            check(newName, String);
+
+            let node = Check.nodeExists(userId, nodeId);
+            node = Check.nodePermissions(userId, nodeId, node);
+
+            itemCollection.update(nodeId, {
+                $set: {
+                    name:newName.slice(0, Meteor.settings.public.maxNameLength)
+                }
+            });
         }
     }
 });
