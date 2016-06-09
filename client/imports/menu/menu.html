@@ -28,15 +28,10 @@
                 {{#if selectedHasChildren}}
                     <li><a class="btn-floating orange lighten-2" id="openChild"><i class="material-icons">remove_red_eye</i></a></li>
                 {{else}}
-                    {{#if selectedIsRepeatable}}
-                        <li><a class="btn-floating orange lighten-2" id="increaseReps"><i class="material-icons">keyboard_arrow_up</i></a></li>
-                        <li><a class="btn-floating orange lighten-2" id="decreaseReps"><i class="material-icons">keyboard_arrow_down</i></a></li>
-                    {{else}}
-                        <li><a class="btn-floating orange lighten-2" id="splitChild"><i class="material-icons">call_split</i></a></li>
-                        <li><a class="btn-floating orange lighten-2" id="done"><i class="material-icons">{{#if isDone}}close{{else}}check{{/if}}</i></a></li>
-                    {{/if}}
+                    <li><a class="btn-floating orange lighten-2" id="splitChild"><i class="material-icons">call_split</i></a></li>
+                    <li><a class="btn-floating orange lighten-2" id="done"><i class="material-icons">{{#if isDone}}close{{else}}check{{/if}}</i></a></li>
                 {{/if}}
-                <li><a class="btn-floating orange lighten-2" id="relocate"><i class="material-icons">import_export</i></a></li>
+                <li><a class="btn-floating orange lighten-2" id="edit"><i class="material-icons">mode_edit</i></a></li>
                 <li><a class="btn-floating orange lighten-2" id="remove"><i class="material-icons">delete</i></a></li>
                 <li><a class="btn-floating orange lighten-2" id="export"><i class="material-icons">content_copy</i></a></li>
                 <li><a class="btn-floating teal accent-4 add" id="add"><i class="material-icons">add</i></a></li>

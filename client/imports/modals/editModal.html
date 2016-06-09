@@ -1,0 +1,27 @@
+<template name="editModal">
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h4>Confirm</h4>
+            <form id="editForm">
+                <div class="input-field" id="editItemInput">
+                    <input id="editItemName" type="text" class="validate" length="{{nameLength}}"  required>
+                    <label for="editItemName" data-error="Max 50 characters">New Name</label>
+                </div>
+                <p><!-- This pads the input slightly -->
+                </p>
+                <div class="row">
+                    <button type="submit" class="waves-effect waves-light btn spread-button">rename item</button>
+                </div>
+
+            </form>
+            {{#if canRelocate}}
+                <div class="row bottom-row">
+                    <button id="relocate" class="waves-effect waves-light btn spread-button">move item</button>
+                </div>
+            {{/if}}
+        </div>
+        <div class="modal-footer">
+            <a href="#" id="cancel" class="waves-effect waves-light btn-flat"><i class="material-icons">clear</i> cancel</a>
+        </div>
+    </div>
+</template>
