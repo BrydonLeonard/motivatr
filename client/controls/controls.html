@@ -11,10 +11,14 @@
 <template name="sidenav">
     <ul id="slide-out" class="side-nav fixed">
         <li class="logo"><h4>{{name}}</h4></li>
-        <li><a href="#" class="goto" name="tree">Tree view</a></li>
-        <li><a href="#" class="goto" name="menu">Menu view</a></li>
+        <li><a href="#" class="goto" id="navTree">Tree view</a></li>
+        <li><a href="#" class="goto" id="navMenu">Menu view</a></li>
+        {{#unless social}}
+            <li><a href="#" class="goto" id="navProfile">Profile</a></li>
+        {{/unless}}
+        <li><a href="#" id="navAbout">About</a></li>
       <!--  <li><a href="#" class="goto" name="desktop">Desktop controls</a></li>-->
-        <li><a href="#" name="logout">Log Out</a></li>
+        <li><a href="#" name="navLogout">Log Out</a></li>
     </ul>
 </template>
 

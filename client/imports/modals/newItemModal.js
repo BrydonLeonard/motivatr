@@ -186,7 +186,9 @@ let displayModal = function(parent, callback){
  * @param parentNode The parent node. Can be anything on the relevant template
  */
 let addToTemplate = function(parentNode){
-    Blaze.render(Template.newItemModal, parentNode);
+    if (!$('newItemModal').length) {
+        Blaze.render(Template.newItemModal, parentNode);
+    }
 };
 
 

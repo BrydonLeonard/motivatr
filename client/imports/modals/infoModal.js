@@ -49,7 +49,9 @@ let displayModal = function(text, heading, callback){
  * @param parentNode The parent node. Can be anything on the relevant template
  */
 let addToTemplate = function(parentNode){
-    Blaze.render(Template.infoModal, parentNode);
+    if(!$('#infoModal').length) {
+        Blaze.render(Template.infoModal, parentNode);
+    }
 };
 
 export { displayModal, addToTemplate };
