@@ -16,6 +16,80 @@ Meteor.startup(() => {
 
 Meteor.methods({
     /**
+     * returns an array of highest-level parent nodes
+     */
+    getParents: function(){
+        let userId = this.userId;
+        if (userId) {
+            let data = [];
+            itemCollection.find({level: 0, user: userId}).forEach(function (item) {
+                data.push({
+                    id: item._id,
+                    name: item.name
+                });
+            });
+            return data;
+        }
+        return "error";
+    },
+
+    getSpecificTrees: function(ids, hideSelected){
+        let userId = this.userId;
+        if (userId){
+            let data = [];
+
+            //TODO: this should be synchronous. Just make sure
+            itemCollection.find({level: 0, user: userId}).forEach(function (item) {
+                if(ids.indexOf(item._id) != -1){
+                    data.push({
+                        data: {
+                            id: item._id,
+                            name: item.name
+                        },
+                        scratch: {
+                            parent: null,
+                        },
+                        classes: completeClass(item._id) + 'root'
+                    });
+
+                    for (let child of getVisChildren(item._id)) {
+                        if(!hideSelected){
+                            data.push(child);
+                        }
+                        else{
+                            if(child.classes != 'complete '){
+                                data.push(child);
+                            }
+                        }
+                    }
+                }
+            });
+
+            //To hold the edges for the jqtree graph
+            let edges = [];
+            let edgeCount = 0;
+
+            for (var item of data) {
+                if (item.scratch.parent != null) {
+                    edges.push({
+                        data: {
+                            id: 'edgeId' + String(edgeCount++),
+                            target: item.data.id,
+                            source: item.scratch.parent
+                        }
+                    });
+                }
+            }
+
+            //Add the edges to the array to be sent back to the client
+            data = data.concat(edges);
+
+            return data
+        } else {
+            Errors.noLoginError();
+        }
+    },
+    /**
      * Returns the user's todo data, formatted to be displayed by jqtree
      * Returns an array of objects, formatted as:
      *   data{

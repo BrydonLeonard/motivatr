@@ -1,3 +1,37 @@
 <template name="treeContainer">
     <div id="chart_div"></div>
+
+    <!-- Tree settings modal-->
+    <div id="treeSettingsModal" class="modal" >
+        <div class="modal-content" style="min-height: 60vh">
+            <h4>Tree Settings</h4>
+            <div style="text-align: center">
+                <div class="input-field col s12">
+                    <select multiple id="selectedTrees">
+                        <option value="" disabled selected>Choose trees to display</option>
+                        {{#each treeParents}}
+                            <option id={{id}}>{{name}}</option>
+                        {{/each}}
+                    </select>
+                    <label>Choose </label>
+                </div>
+                <p style="text-align: left">
+                    <input type="checkbox" id="hideCompleted" />
+                    <label for="hideCompleted">Hide Completed Tasks</label>
+                </p>
+            </div>
+
+        </div>
+        <div class="modal-footer">
+            <a id="apply" class="modal-action modal-close waves-effect waves-green btn-flat">Apply</a>
+        </div>
+    </div>
+
+    <div></div>
+
+    <div class="fixed-action-btn" style="bottom: 45px; right: 24px;">
+        <a id="openTreeSettings" href="#treeSettingsModal" class="btn-floating btn-large red modal-trigger">
+            <i class="large material-icons">settings</i>
+        </a>
+    </div>
 </template>
