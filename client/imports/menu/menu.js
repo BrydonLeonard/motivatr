@@ -28,8 +28,6 @@ let breadcrumbs;
 let bounce;
 let bounceSpin;
 
-ic = itemCollection;
-
 
 Template.todoContainer.onCreated(function(){
     breadcrumbs = [{name:'home', key:'root', num:0}];

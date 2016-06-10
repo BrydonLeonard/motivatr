@@ -96,7 +96,9 @@ Template.relocateModal.events({
  * @param parentNode The parent node. Can be anything on the relevant template
  */
 let addToTemplate = function(parentNode){
-    Blaze.render(Template.relocateModal, parentNode);
+    if (!$('#relocateModal')) {
+        Blaze.render(Template.relocateModal, parentNode);
+    }
 };
 
 export { addToTemplate, displayModal }

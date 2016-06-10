@@ -120,12 +120,14 @@ let displayModal = function(nodeId, parent){
  * @param parentNode The parent node. Can be anything on the relevant template
  */
 let addToTemplate = function(parentNode){
-    Blaze.render(Template.editModal, parentNode);
-    Tracker.afterFlush(function() {
-        //Display the character counter
-        $('#editItemInput > .character-counter').remove();
-        $('#editItemName').characterCounter();
-    });
+    if (!$('#editModal').length) {
+        Blaze.render(Template.editModal, parentNode);
+        Tracker.afterFlush(function () {
+            //Display the character counter
+            $('#editItemInput > .character-counter').remove();
+            $('#editItemName').characterCounter();
+        });
+    }
 };
 
 export { displayModal, addToTemplate };

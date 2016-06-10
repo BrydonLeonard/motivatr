@@ -1,6 +1,11 @@
 import { Router } from 'meteor/iron:router';
 import 'meteor/materialize:materialize';
 import './controls.html';
+import * as aboutModal from '../imports/modals/aboutModal';
+
+Template.sidenav.onCreated(function(){
+    aboutModal.addToTemplate($('body')[0]);
+});
 
 Template.sidenav.onRendered(function(){
     if(detectMobile() == true){
@@ -32,18 +37,26 @@ function detectMobile() {
 }
 
 Template.sidenav.events({
-    'click [name="menu"]':function(event){
+    'click #navMenu':function(event){
         event.preventDefault();
         Router.go('/home');
     },
-    'click [name="tree"]':function(event){
+    'click #navTree':function(event){
         event.preventDefault();
         Router.go('/tree');
     },
-    'click [name="logout"]':function(event){
+    'click #navLogout':function(event){
         event.preventDefault();
         $('.side-nav').sideNav('hide');
         Meteor.logout();
+    },
+    'click #navProfile':function(event){
+        event.preventDefault();
+        Router.go('/profile');
+    },
+    'click #navAbout':function(event){
+        event.preventDefault();
+        aboutModal.displayModal();
     }
     /**
     'click [name="desktop"]':function(event){
@@ -61,6 +74,13 @@ Template.sidenav.helpers({
             return Meteor.user().username;
         }
         return '';
+    },
+    'social':function(){
+        let user = Meteor.user();
+        if (!user){
+            return
+        }
+        return !(!user.services);
     }
 })
 

@@ -76,8 +76,8 @@ header, main, footer, body {
 
 /* For non-matching password inputs */
 .input-field input[type=password].nomatch {
-    border-bottom: 1px solid #F44336;
-    box-shadow: 0 1px 0 0 #F44336;
+    border-bottom: 1px solid #F44336 !important;
+    box-shadow: 0 1px 0 0 #F44336 !important;
 }
 
 /* Disable DOM selection */
@@ -146,6 +146,40 @@ body, html{
 /* This fixed error messages on inputs */
 label[data-error]:after {
     white-space: nowrap;
+}
+
+/* For inputs on non-white backgrounds */
+/* label color */
+.input-field.colored-back label {
+    color: #dddddd;
+}
+/* label focus color */
+.input-field.colored-back input:focus + label {
+    color: #ffffff;
+}
+/* label underline color */
+.input-field.colored-back input {
+    border-bottom: 1px solid #cccccc;
+    box-shadow: 0 1px 0 0 #cccccc;
+}
+/* label underline focus color */
+.input-field.colored-back input:focus {
+    border-bottom: 1px solid #ffffff;
+    box-shadow: 0 1px 0 0 #ffffff;
+}
+/* valid color */
+.input-field.colored-back input.valid {
+    border-bottom: 1px solid #ffffff;
+    box-shadow: 0 1px 0 0 #ffffff;
+}
+/* invalid color */
+.input-field.colored-back input.invalid {
+    border-bottom: 1px solid #E57373;
+    box-shadow: 0 1px 0 0 #E57373;
+}
+/* icon prefix focus color */
+.input-field.colored-back .prefix.active {
+    color: #ffffff;
 }
 
 

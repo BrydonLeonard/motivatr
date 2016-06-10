@@ -57,7 +57,9 @@ let displayModal = function(text, callback){
  * @param parentNode The parent node. Can be anything on the relevant template
  */
 let addToTemplate = function(parentNode){
-    Blaze.render(Template.confirmModal, parentNode);
+    if (!$('#confirmModal').length) {
+        Blaze.render(Template.confirmModal, parentNode);
+    }
 };
 
 export { displayModal, addToTemplate };

@@ -527,6 +527,28 @@ Meteor.methods({
                 }
             });
         }
+    },
+    /**
+     * Changes a user's username
+     * @param newUsername
+     */
+    'changeUsername':function(newUsername){
+        let userId = this.userId;
+        check(newUsername, String);
+        Accounts.setUsername(userId, newUsername);
+    },
+    /**
+     * Changes a user's email address
+     * @param newEmail
+     */
+    'changeEmail':function(newEmail){
+        let userId = this.userId;
+        Meteor.users.update(userId, {
+            $set:{
+                email:[]
+            }
+        });
+        Accounts.addEmail(userId, newEmail, true);
     }
 });
 

@@ -47,6 +47,19 @@ Router.route('/desktop', function() {
     }
 });
 
+Router.route('/profile', function() {
+    this.render('profile')
+    },{
+        name:'profile',
+    onBeforeAction:function(){
+        if (!Meteor.userId()) {
+            Router.go('login');
+        }
+        require('./imports/profile/profile.js');
+        this.next();
+    }
+})
+
 Router.route('/login', function() {
     this.render('login')
     }, {
