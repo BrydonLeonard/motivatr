@@ -23,17 +23,31 @@ Template.editModal.helpers({
 });
 
 Template.editModal.events({
+    /**
+     * Submit the form, changing the name of the node
+     * @param event
+     */
     'submit #editForm':function(event){
         event.preventDefault();
+        console.log('submitting');
         Meteor.call('rename', currentNodeId, $(event.target.editItemName).val(),  function(){
            $('#editModal').closeModal();
         });
     },
+    /**
+     * Click the button to open the relocate modal
+     * @param event
+     */
     'click #relocate':function(event){
         event.preventDefault();
         relocateNode();
+
         $('#editModal').closeModal();
     },
+    /**
+     * Click the cancel button
+     * @param event
+     */
     'click #cancel':function(event){
         event.preventDefault();
         $('#editModal').closeModal();
@@ -50,7 +64,6 @@ let displayModal = function(nodeId, parent){
     currentNodeId = nodeId;
     parentId = parent;
 
-    //Because this modal works together with the relocate modal, we do some leg work here to prepare for that
     //The node that we'll be moving
     let thisItem = itemCollection.findOne(nodeId);
     let currentNode = {
@@ -69,7 +82,7 @@ let displayModal = function(nodeId, parent){
         parentNode = {
             name: activeItem.name,
             _id: activeItem._id,
-            grandparent: activeItem.parent //This is where we would move the node
+            grandparent: activeItem.parent //This is where we would move the node if it moved to its grandparent
         };
     } else {
         //If we're already at the root, then send a null _id
@@ -98,9 +111,11 @@ let displayModal = function(nodeId, parent){
         });
     }
 
+
     //Check whether we should be displaying the relocate button
+    //We do so if we have more than 1 node on this level or have a parent
     canRelocate = true;
-    if (siblingNodes.length == 1 && parentNode.id == null){
+    if (siblingNodes.length === 1 && !parentNode._id){
         canRelocate = false;
     } else {
         //Set up the function to be called by the relocate button
