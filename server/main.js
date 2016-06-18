@@ -1,6 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
-import { itemCollection } from './imports/dbSetup';
+import { itemCollection, analytics, initDB } from './../shared/imports/dbSetup';
 import { completeClass, getVisChildren } from './imports/visTreeHelpers';
 import { completeLabel, getDesktopChildren } from './imports/desktopTreeHelpers';
 import * as Errors from './imports/errors';
@@ -12,6 +12,7 @@ import * as serializer from './imports/serializer';
 
 Meteor.startup(() => {
     initServices();
+    initDB();
 });
 
 
@@ -194,10 +195,27 @@ Meteor.methods({
                     bubbleComplete(_id, 1);
                 }
 
+                if(parent.children.length === 0){
+                    Meteor.users.update(userId, {
+                        $inc:{
+                            'profile.split' : 1
+                        }
+                    });
+                    analytics.update({},{
+                        $inc:{
+                            split : 1
+                        }
+                    });
+                }
+                console.log(parent);
+
 
                 if (duplicates === 1){
                     return _id;
                 }
+
+
+
             } else {
                 Errors.noLoginError();
             }
@@ -555,6 +573,8 @@ Meteor.methods({
 Meteor.publish('itemCollection', function(){
     return itemCollection.find({user:this.userId});
 });
+
+
 
 
 

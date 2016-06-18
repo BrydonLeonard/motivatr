@@ -1,6 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import { expect } from 'meteor/practicalmeteor:chai';
-import { itemCollection } from './imports/dbSetup';
+import { itemCollection } from './../shared/imports/dbSetup';
 import './main';
 
 let resetDB = function(user, noReset){

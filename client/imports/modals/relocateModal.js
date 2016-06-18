@@ -43,6 +43,7 @@ let displayModal = function(params){
     let selfIndex = siblings.indexOf(currentNode);
     siblings.splice(selfIndex, 1);
     openDep.changed();
+    console.log('asfasf');
     $('#relocateModal').openModal();
 };
 

@@ -1,5 +1,5 @@
 import { expect } from 'meteor/practicalmeteor:chai';
-import { itemCollection } from './dbSetup';
+import { itemCollection } from './../../shared/imports/dbSetup';
 import { progress, bubbleComplete, bubbleRemove, sinkRemove, bubbleAdd, addLeaf, removeLeaf, bubbleLevel } from './treeHelpers';
 
 describe('treeHelpers', () => {

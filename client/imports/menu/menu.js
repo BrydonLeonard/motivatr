@@ -1,6 +1,6 @@
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
-import { itemCollection } from '../dbSetup';
+import { itemCollection } from '../../../shared/imports/dbSetup';
 import { Session } from 'meteor/session';
 import { Meteor } from 'meteor/meteor';
 

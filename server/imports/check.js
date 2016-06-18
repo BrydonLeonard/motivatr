@@ -1,6 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import * as Errors from './errors';
-import { itemCollection } from './dbSetup';
+import { itemCollection } from './../../shared/imports/dbSetup';
 
 /**
  * Find the node with given ID and checks that the current user has access permission

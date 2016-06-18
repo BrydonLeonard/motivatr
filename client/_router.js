@@ -84,6 +84,17 @@ Router.route('/signup', function() {
     }
 );
 
+Router.route('/analytics', function() {
+    this.render('analytics')
+    }, {
+    name:'analytics',
+    onBeforeAction: function() {
+        require('./imports/analytics/analytics.js');
+        this.next();
+        }
+    }
+);
+
 /**
  * Default route.
  * For now, will redirect to menu screen.

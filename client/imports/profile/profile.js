@@ -1,6 +1,6 @@
 import { Template } from 'meteor/templating';
 import { Meteor } from 'meteor/meteor';
-import { itemCollection } from '../dbSetup';
+import { itemCollection } from '../../../shared/imports/dbSetup';
 import { Accounts } from 'meteor/accounts-base';
 
 import './profile.html';

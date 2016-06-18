@@ -1,6 +1,6 @@
 import './editModal.html';
 import * as relocateModal from './relocateModal.js';
-import { itemCollection } from '../dbSetup';
+import { itemCollection } from '../../../shared/imports/dbSetup';
 
 let currentNodeId = null;
 let parentId = null;
@@ -25,7 +25,7 @@ Template.editModal.helpers({
 Template.editModal.events({
     'submit #editForm':function(event){
         event.preventDefault();
-        Meteor.call('rename', currentNodeId,$(event.target.editItemName).val(),  function(){
+        Meteor.call('rename', currentNodeId, $(event.target.editItemName).val(),  function(){
            $('#editModal').closeModal();
         });
     },
