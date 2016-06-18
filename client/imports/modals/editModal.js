@@ -5,6 +5,7 @@ import { itemCollection } from '../../../shared/imports/dbSetup';
 let currentNodeId = null;
 let parentId = null;
 let relocateNode = null;
+let currentNodeName = null;
 
 //These 2 work together to determine whether the move button is displayed
 let relocateDep = new Tracker.Dependency;
@@ -59,12 +60,19 @@ Template.editModal.events({
  * @param text Text to be displayed in the body
  */
 let displayModal = function(nodeId, parent){
-    $('#editItemName').val('');
-
     currentNodeId = nodeId;
+
+    currentNodeName = itemCollection.findOne(currentNodeId).name;
+
+    $('#editItemName').val(currentNodeName);
+    Tracker.afterFlush(function(){
+        Materialize.updateTextFields();
+        $('#editItemName').focus();
+    });
+
     parentId = parent;
 
-    //The node that we'll be moving
+    //The node that we'll be moving if we relocate
     let thisItem = itemCollection.findOne(nodeId);
     let currentNode = {
         name: thisItem.name,

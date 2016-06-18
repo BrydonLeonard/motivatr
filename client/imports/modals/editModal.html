@@ -4,7 +4,7 @@
             <div class="modal-content">
                 <h4>Confirm</h4>
                 <div class="input-field" id="editItemInput">
-                    <input id="editItemName" type="text" class="validate" length="{{nameLength}}"  required>
+                    <input id="editItemName" value="{{currentName}}" type="text" class="validate" length="{{nameLength}}"  required>
                     <label for="editItemName" data-error="Max 50 characters">New Name</label>
                 </div>
                 <p><!-- This pads the input slightly -->
@@ -18,7 +18,7 @@
             </div>
             <div class="modal-footer">
                 <a href="#" id="cancel" class="waves-effect waves-light btn-flat"><i class="material-icons">clear</i> cancel</a>
-                <a href="#" type="submit" class="waves-effect waves-light btn-flat"><i class="material-icons">done</i> save</a>
+                <button href="#" type="submit" class="waves-effect waves-light btn-flat"><i class="material-icons">done</i> save</button>
             </div>
         </form>
     </div>

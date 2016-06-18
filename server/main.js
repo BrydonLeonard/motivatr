@@ -567,6 +567,24 @@ Meteor.methods({
             }
         });
         Accounts.addEmail(userId, newEmail, true);
+    },
+    /**
+     * Returns an object with keys representing depth and values representing the number of nodes at that depth
+     * @returns {{}}
+     *///TODO tests
+    'analyticsLevelData':function(){
+        let userId = this.userId;
+        if (userId){
+            let levels = {};
+            let items = itemCollection.find({user:userId});
+            items.forEach((node) => {
+                if (!levels[node.level]){
+                    levels[node.level] = 0;
+                }
+                levels[node.level]++;
+            });
+            return levels;
+        }
     }
 });
 

@@ -41,7 +41,7 @@ let displayModal = function(params){
     }
     //The node itself will actually form part of the sibling array initially
     let selfIndex = siblings.indexOf(currentNode);
-    siblings = siblings.filter(node => node.id != currentNode._id);
+    siblings = siblings.filter(node => node._id != currentNode._id);
     openDep.changed();
     $('#relocateModal').openModal();
 };

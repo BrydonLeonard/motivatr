@@ -182,6 +182,12 @@ label[data-error]:after {
     color: #ffffff;
 }
 
+/* Analytics charts fill their parent */
+.analytics-chart{
+    width:100%;
+    height:100%;
+}
+
 
 /* Working on these */
 
