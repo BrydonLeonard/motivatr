@@ -81,8 +81,6 @@ describe('serialization methods', () => {
 
         serializer.deserializeTree('{"n":"root","c":[{"n":"l1","c":[{"n":"l21","c":[]},{"n":"l22","c":[]}]}]}', null, 15);
 
-        console.log(itemCollection.find().fetch());
-
 
         let rootNode = itemCollection.findOne({name:"root"});
         let l1Node = itemCollection.findOne({name:"l1"});

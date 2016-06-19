@@ -32,7 +32,14 @@ Template.analytics.onRendered(function(){
 
         chart = new Chart(ctx, {
             type: 'bar',
-            data
+            data,
+            options: {
+                scales: {
+                    yAxes: [{
+                        stacked: true
+                    }]
+                }
+            }
         });
     });
 });

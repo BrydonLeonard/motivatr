@@ -16,7 +16,7 @@ let nodePermissions = function(user, _id, node){
     node = node || itemCollection.findOne(_id);
 
     //Extra check to ensure that the node's id is the same as the given id, if the calling method provides both
-    if (node._id == _id && node.user != user){
+    if (node._id === _id && node.user != user){
         Errors.accessPermError();
     }
 

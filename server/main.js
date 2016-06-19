@@ -1,6 +1,7 @@
 import { Meteor } from 'meteor/meteor';
-import { Mongo } from 'meteor/mongo';
-import { itemCollection, analytics, initDB } from './../shared/imports/dbSetup';
+import {  Accounts } from 'meteor/accounts-base';
+import { check } from 'meteor/check';
+import { itemCollection, analytics as analyticsCollection, initDB } from './../shared/imports/dbSetup';
 import { completeClass, getVisChildren } from './imports/visTreeHelpers';
 import { completeLabel, getDesktopChildren } from './imports/desktopTreeHelpers';
 import * as Errors from './imports/errors';
@@ -9,6 +10,7 @@ import { bubbleComplete, bubbleRemove, sinkRemove,  bubbleAdd, bubbleUpdate, add
 import { initServices } from './imports/services';
 import moment from 'moment';
 import * as serializer from './imports/serializer';
+import * as analytics from './imports/analytics';
 
 Meteor.startup(() => {
     initServices();
@@ -27,26 +29,25 @@ Meteor.methods({
      *   }
      *   classes
      */
-    visTreeData: function(){
+    visTreeData(){
         let userId = this.userId;
         if (userId){
             let data = [];
 
             //All top-level items for the logged in user
-            //TODO: this should be synchronous. Just make sure
-            itemCollection.find({level: 0, user: userId}).forEach(function (item) {
+            itemCollection.find({ level: 0, user: userId }).forEach(function(item){
                 data.push({
                     data: {
                         id: item._id,
                         name: item.name
                     },
                     scratch: {
-                        parent: null,
+                        parent: null
                     },
                     classes: completeClass(item._id) + 'root'
                 });
 
-                for (let child of getVisChildren(item._id)) {
+                for (let child of getVisChildren(item._id)){
                     data.push(child);
                 }
             });
@@ -55,8 +56,8 @@ Meteor.methods({
             let edges = [];
             let edgeCount = 0;
 
-            for (var item of data) {
-                if (item.scratch.parent != null) {
+            for (let item of data){
+                if (item.scratch.parent != null){
                     edges.push({
                         data: {
                             id: 'edgeId' + String(edgeCount++),
@@ -70,7 +71,7 @@ Meteor.methods({
             //Add the edges to the array to be sent back to the client
             data = data.concat(edges);
 
-            return data
+            return data;
         } else {
             Errors.noLoginError();
         }
@@ -84,16 +85,16 @@ Meteor.methods({
      *      children:[]
      *   }
      */
-    desktopTreeData: function(){
+    desktopTreeData(){
         let userId = this.userId;
         if (userId){
             let data = [];
-            itemCollection.find({level:0, user:userId}).forEach(function(item){
+            itemCollection.find({ level: 0, user: userId }).forEach(function(item){
                 let temp = {
                     id: item._id,
                     label: (item.name + completeLabel(item._id)),
                     children: []
-                }
+                };
 
                 temp.children = getDesktopChildren(item._id);
                 data.push(temp);
@@ -117,20 +118,20 @@ Meteor.methods({
      * }
      * @return The new id, if only 1 element was added
      */
-    addChild: function(props){
+    addChild(props){
         let duplicates = 1;
         if (props.duplicates){
             duplicates = Number(props.duplicates);
         }
 
-        for (let i = 0; i < duplicates; i++) {
+        for (let i = 0; i < duplicates; i++){
             let userId = this.userId;
             let _id;
-            if (userId) {
+            if (userId){
                 let newObj = {};
 
                 //Check parentId
-                if (props.parentId) {
+                if (props.parentId){
                     check(props.parentId, String);
                     newObj.parent = props.parentId;
                 } else {
@@ -140,10 +141,11 @@ Meteor.methods({
                 //Check name
                 //If they somehow send us a name longer than 50, just chop it down
                 check(props.name, String);
-                newObj.name = (props.name + (duplicates > 1 ? ' (' + (i+1) + ')' : '')).slice(0, Meteor.settings.public.maxNameLength);
+                newObj.name = (props.name + (duplicates > 1 ? ' (' + (i + 1) + ')' : ''))
+                    .slice(0, Meteor.settings.public.maxNameLength);
 
                 //Check priority
-                if (props.priority) {
+                if (props.priority){
                     check(props.priority, Number);
                     check((props.priority >= 0 && props.priority < 6), true);
                     newObj.priority = props.priority;
@@ -153,33 +155,33 @@ Meteor.methods({
 
                 //Check date
                 let formattedDate = null;
-                if (props.date) {
-                    formattedDate = moment(props.date, 'DD MMMM, YYYY')
+                if (props.date){
+                    formattedDate = moment(props.date, 'DD MMMM, YYYY');
                 }
 
-                if (props.date && formattedDate != null) {
+                if (props.date && formattedDate != null){
                     check(formattedDate.isValid(), true);
                     newObj.date = formattedDate.toDate();
                 }
 
-                if (props.repeatable) {
+                if (props.repeatable){
                     check(props.repeatable, Boolean);
                     newObj.repeatable = props.repeatable;
 
-                    if (props.repeatableLimit) {
+                    if (props.repeatableLimit){
                         check(props.repeatableLimit, Number);
                         newObj.repeatableLimit = props.repeatableLimit;
                     }
                 }
 
                 //Check access permissions
-                if (props.parentId != null) {
+                if (props.parentId != null){
                     Check.nodePermissions(userId, props.parentId);
                 }
                 newObj.user = userId;
 
                 let parent = itemCollection.findOne(props.parentId);
-                if (parent && parent.done) {
+                if (parent && parent.done){
                     itemCollection.update(props.parentId, {
                         $set: {
                             done: false
@@ -195,27 +197,24 @@ Meteor.methods({
                     bubbleComplete(_id, 1);
                 }
 
-                if(parent.children.length === 0){
+                if (parent && parent.children && parent.children.length === 0){
                     Meteor.users.update(userId, {
-                        $inc:{
-                            'profile.split' : 1
+                        $inc: {
+                            'profile.split': 1
                         }
                     });
-                    analytics.update({},{
-                        $inc:{
-                            split : 1
+                    analyticsCollection.update({}, {
+                        $inc: {
+                            split: 1
                         }
                     });
                 }
-                console.log(parent);
 
+                analytics.nodeAdded(userId);
 
                 if (duplicates === 1){
                     return _id;
                 }
-
-
-
             } else {
                 Errors.noLoginError();
             }
@@ -226,7 +225,7 @@ Meteor.methods({
      * The node must be a leaf node for this to work correctly
      * @param _id
      */
-    toggleComplete: function(_id){
+    toggleComplete(_id){
         let userId = this.userId;
         if (userId){
             check(_id, String);
@@ -253,7 +252,7 @@ Meteor.methods({
      * Will only work if reps < repeatableLimit or there is no repeatableLimit
      * @param _id ID of the item to increment
      */
-    increaseReps: function(_id){
+    increaseReps(_id){
         let userId = this.userId;
         if (userId){
             check(_id, String);
@@ -292,7 +291,7 @@ Meteor.methods({
      * Will only work if reps > 1
      * @param _id ID of the item to decrement
      */
-    decreaseReps: function(_id){
+    decreaseReps(_id){
         let userId = this.userId;
         if (userId){
             check(_id, String);
@@ -331,7 +330,7 @@ Meteor.methods({
      * If the node has children, will remove them and bubble necessary changes up the tree
      * @param _id
      */
-    removeNode: function(_id){
+    removeNode(_id){
         //TODO add case for removing a root node. Those don't need so much checking
         let userId = this.userId;
         if (userId){
@@ -340,7 +339,7 @@ Meteor.methods({
             let node = Check.nodeExists(userId, _id);
             node = Check.nodePermissions(userId, _id, node);
 
-            if (node.descendants === 0) {
+            if (node.descendants === 0){
                 //We are requested to remove a leaf node
                 bubbleRemove(node._id, node.done);
                 sinkRemove(node._id);
@@ -351,6 +350,7 @@ Meteor.methods({
                         children: node._id
                     }
                 });
+                analytics.nodeRemoved(userId);
             } else {
                 //We are requested to remove an internal node
                 //Remove the nodes from the ancestor's counters
@@ -379,7 +379,8 @@ Meteor.methods({
                     $pull: {
                         children: node._id
                     }
-                })
+                });
+                analytics.nodeRemoved(userId, node.descendants);
             }
         }
     },
@@ -388,7 +389,7 @@ Meteor.methods({
      * No changes are bubbled and the children are not removed from their parent's arrays
      * @param _id The id of the node whose children should be removed
      */
-    removeChildren: function(_id){
+    removeChildren(_id){
         let userId = this.userId;
         if (userId){
             check(_id, String);
@@ -406,9 +407,9 @@ Meteor.methods({
      * @param parentId The id of the new parent of the root of the subtree
      */
     //TODO: Tests for adoptChild
-    adoptChild: function(rootId, parentId){
-        if (rootId == parentId){
-            throw new Meteor.Error("adopt-self", 'A node cannot adopt itself');
+    adoptChild(rootId, parentId){
+        if (rootId === parentId){
+            throw new Meteor.Error('adopt-self', 'A node cannot adopt itself');
         }
         let userId = this.userId;
         if (userId){
@@ -506,9 +507,9 @@ Meteor.methods({
      * Serializes a tree and returns the string
      * @param tree The root of the tree to serialize
      */
-    'exportTree':function(tree){
+    exportTree(tree){
         let userId = this.userId;
-        if (userId) {
+        if (userId){
             check(tree, String);
             return serializer.serializeTree(tree);
         }
@@ -519,10 +520,13 @@ Meteor.methods({
      * @param treeString The serialized tree
      * @param parent The parent of the tree
      */
-    'importTree':function(treeString, parent){
-        if (this.userId) {
+    importTree(treeString, parent){
+        if (this.userId){
             check(treeString, String);
-            serializer.deserializeTree(treeString, parent ? parent : null, this.userId);
+            let rootId = serializer.deserializeTree(treeString, parent, this.userId);
+            let numAdded = itemCollection.findOne(rootId).descendants + 1;
+
+            analytics.nodeAdded(this.userId, numAdded);
         }
     },
     /**
@@ -530,7 +534,7 @@ Meteor.methods({
      * @param nodeId The node ID
      * @param newName The new name of the node
      */
-    'rename':function(nodeId, newName){
+    rename(nodeId, newName){
         let userId = this.userId;
         if (userId){
             check(nodeId, String);
@@ -541,7 +545,7 @@ Meteor.methods({
 
             itemCollection.update(nodeId, {
                 $set: {
-                    name:newName.slice(0, Meteor.settings.public.maxNameLength)
+                    name: newName.slice(0, Meteor.settings.public.maxNameLength)
                 }
             });
         }
@@ -550,7 +554,7 @@ Meteor.methods({
      * Changes a user's username
      * @param newUsername
      */
-    'changeUsername':function(newUsername){
+    changeUsername(newUsername){
         let userId = this.userId;
         check(newUsername, String);
         Accounts.setUsername(userId, newUsername);
@@ -559,11 +563,11 @@ Meteor.methods({
      * Changes a user's email address
      * @param newEmail
      */
-    'changeEmail':function(newEmail){
+    changeEmail(newEmail){
         let userId = this.userId;
         Meteor.users.update(userId, {
-            $set:{
-                email:[]
+            $set: {
+                email: []
             }
         });
         Accounts.addEmail(userId, newEmail, true);
@@ -571,12 +575,12 @@ Meteor.methods({
     /**
      * Returns an object with keys representing depth and values representing the number of nodes at that depth
      * @returns {{}}
-     *///TODO tests
-    'analyticsLevelData':function(){
+     */
+    analyticsLevelData(){
         let userId = this.userId;
         if (userId){
             let levels = {};
-            let items = itemCollection.find({user:userId});
+            let items = itemCollection.find({ user: userId });
             items.forEach((node) => {
                 if (!levels[node.level]){
                     levels[node.level] = 0;
@@ -589,11 +593,5 @@ Meteor.methods({
 });
 
 Meteor.publish('itemCollection', function(){
-    return itemCollection.find({user:this.userId});
+    return itemCollection.find({ user: this.userId });
 });
-
-
-
-
-
-
