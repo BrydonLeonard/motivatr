@@ -1,5 +1,5 @@
 import { Meteor } from 'meteor/meteor';
-import { itemCollection } from '../dbSetup';
+import { itemCollection } from '../../../shared/imports/dbSetup';
 import 'jqtree';
 import './jqtree.css';
 import './desktop.html';

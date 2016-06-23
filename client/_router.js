@@ -47,6 +47,19 @@ Router.route('/desktop', function() {
     }
 });
 
+Router.route('/profile', function() {
+    this.render('profile')
+    },{
+        name:'profile',
+    onBeforeAction:function(){
+        if (!Meteor.userId()) {
+            Router.go('login');
+        }
+        require('./imports/profile/profile.js');
+        this.next();
+    }
+})
+
 Router.route('/login', function() {
     this.render('login')
     }, {
@@ -67,6 +80,17 @@ Router.route('/signup', function() {
         onBeforeAction: function() {
             require('./imports/signup/signup.js');
             this.next();
+        }
+    }
+);
+
+Router.route('/analytics', function() {
+    this.render('analytics')
+    }, {
+    name:'analytics',
+    onBeforeAction: function() {
+        require('./imports/analytics/analytics.js');
+        this.next();
         }
     }
 );

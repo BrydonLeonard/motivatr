@@ -1,0 +1,66 @@
+<template name="profile">
+    <div class="container">
+        <div class="row">
+            <div class="col s12 m6">
+                <div class="card teal lighten-2">
+                    <div class="card-content white-text">
+                        <span class="card-title">{{username}}</span>
+                        <p>{{email}}</p>
+                    </div>
+                </div>
+                <div class="card teal lighten-2">
+                    <form id="changePassForm">
+                        <div class="card-content white-text">
+                            <span class="card-title">Change your password</span>
+                            <div class="input-field colored-back">
+                                <input id="currentPass" type="password" class="validate" required>
+                                <label for="currentPass">Password</label>
+                            </div>
+                            <div class="input-field colored-back">
+                                <input id="newPass1" type="password" class="validate" required>
+                                <label for="newPass1">New password</label>
+                            </div>
+                            <div class="input-field colored-back">
+                                <input id="newPass2" type="password" class="validate" required>
+                                <label for="newPass2">New password again</label>
+                            </div>
+                        </div>
+                        <div class="card-action">
+                            <button type="submit" class="waves-effect waves-light btn spread-button">Save password</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col s12 m6">
+                <div class="card teal lighten-2">
+                    <form id="changeUserForm">
+                        <div class="card-content white-text">
+                            <span class="card-title">Change your user name</span>
+                            <div class="input-field colored-back">
+                                <input id="newUser" type="text" class="validate" required>
+                                <label for="newUser">New username</label>
+                            </div>
+                        </div>
+                        <div class="card-action">
+                            <button type="submit" class="waves-effect waves-light btn spread-button">Save username</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card teal lighten-2">
+                    <form id="changeEmailForm">
+                        <div class="card-content white-text">
+                            <span class="card-title">Change your email</span>
+                            <div class="input-field colored-back">
+                                <input id="newEmail" type="text" class="validate" required>
+                                <label for="newEmail">New email</label>
+                            </div>
+                        </div>
+                        <div class="card-action">
+                            <button type="submit" class="waves-effect waves-light btn spread-button">Save email</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

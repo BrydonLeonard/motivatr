@@ -41,24 +41,40 @@ let displayModal = function(params){
     }
     //The node itself will actually form part of the sibling array initially
     let selfIndex = siblings.indexOf(currentNode);
-    siblings.splice(selfIndex, 1);
+    siblings = siblings.filter(node => node._id != currentNode._id);
     openDep.changed();
     $('#relocateModal').openModal();
 };
 
 Template.relocateModal.helpers({
+    /**
+     * Returns all siblings of the current node
+     * @returns {Array}
+     */
     siblings:function(){
         openDep.depend();
         return siblings;
     },
+    /**
+     * Returns the parent of the current node
+     * @returns {{}}
+     */
     parent:function(){
         openDep.depend();
         return parent;
     },
+    /**
+     * Returns the current node
+     * @returns {{}}
+     */
     currentNode: function(){
         openDep.depend();
         return currentNode;
     },
+    /**
+     * Returns true if the current node has a parent
+     * @returns {boolean}
+     */
     hasParent: function(){
         openDep.depend();
         return (parent._id != null)
@@ -66,6 +82,10 @@ Template.relocateModal.helpers({
 });
 
 Template.relocateModal.events({
+    /**
+     * Click on a sibling to have the current node adopted by it
+     * @param event
+     */
     'click .sibling-button':function(event){
         event.preventDefault();
         Meteor.call('adoptChild', currentNode._id, event.target.id);
@@ -74,9 +94,15 @@ Template.relocateModal.events({
             callback();
         }
     },
+    /**
+     * Click the cancel button
+     */
     'click #cancel':function(){
         $('#relocateModal').closeModal();
     },
+    /**
+     * Click the button to have the node adopted by its parent
+     */
     'click #levelUp':function(){
         event.preventDefault();
         Meteor.call('adoptChild', currentNode._id, parent.grandparent);
@@ -84,7 +110,6 @@ Template.relocateModal.events({
         if (callback){
             callback();
         }
-
     }
 });
 
@@ -96,7 +121,10 @@ Template.relocateModal.events({
  * @param parentNode The parent node. Can be anything on the relevant template
  */
 let addToTemplate = function(parentNode){
-    Blaze.render(Template.relocateModal, parentNode);
+    if (!$('#relocateModal').length) {
+        console.log('adding');
+        Blaze.render(Template.relocateModal, parentNode);
+    }
 };
 
 export { addToTemplate, displayModal }

@@ -1,4 +1,4 @@
-import { itemCollection } from './dbSetup';
+import { itemCollection } from './../../shared/imports/dbSetup';
 import { addLeaf, bubbleAdd } from './treeHelpers';
 
 /**
@@ -59,6 +59,8 @@ let deserializeTree = function(treeString, parent, user){
         bubbleAdd(rootId);
 
         tree.c.forEach((child) => addToTree(child, level + 1, rootId, user));
+
+        return rootId;
     } catch (e){
         throw new Meteor.Error('parse-fail', "Couldn't parse tree");
     }

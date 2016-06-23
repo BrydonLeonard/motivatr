@@ -1,6 +1,6 @@
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
-import { itemCollection } from '../dbSetup';
+import { itemCollection } from '../../../shared/imports/dbSetup';
 import { Session } from 'meteor/session';
 import { Meteor } from 'meteor/meteor';
 
@@ -28,19 +28,19 @@ let breadcrumbs;
 let bounce;
 let bounceSpin;
 
-ic = itemCollection;
-
 
 Template.todoContainer.onCreated(function(){
     breadcrumbs = [{name:'home', key:'root', num:0}];
     Session.set('activeItem', null);
     Session.set('selectedItem', null);
     Meteor.subscribe('itemCollection');
+
     newItemModal.addToTemplate($('body')[0]);
     confirmModal.addToTemplate($('body')[0]);
     relocateModal.addToTemplate($('body')[0]);
     infoModal.addToTemplate($('body')[0]);
     editModal.addToTemplate($('body')[0]);
+
     initAnimations();
     bounce = new Bounce();
     bounce.scale({

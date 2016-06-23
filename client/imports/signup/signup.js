@@ -31,7 +31,7 @@ Template.signup.events({
             let data = {
                 username,
                 password,
-                emails: [email]
+                email
             };
 
             Accounts.createUser(data, function (error) {
