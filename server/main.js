@@ -567,7 +567,7 @@ Meteor.methods({
         let userId = this.userId;
         Meteor.users.update(userId, {
             $set: {
-                email: []
+                emails: []
             }
         });
         Accounts.addEmail(userId, newEmail, true);
