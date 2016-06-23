@@ -1,4 +1,4 @@
-import { itemCollection } from './dbSetup';
+import { itemCollection } from './../../shared/imports/dbSetup';
 import * as Check from './check';
 
 /**

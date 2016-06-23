@@ -1,5 +1,5 @@
 import { expect } from 'meteor/practicalmeteor:chai';
-import { itemCollection } from './dbSetup';
+import { itemCollection } from './../../shared/imports/dbSetup';
 import * as serializer from './serializer';
 
 describe('serialization methods', () => {
@@ -80,8 +80,6 @@ describe('serialization methods', () => {
         expect(itemCollection.find().count()).to.equal(0);
 
         serializer.deserializeTree('{"n":"root","c":[{"n":"l1","c":[{"n":"l21","c":[]},{"n":"l22","c":[]}]}]}', null, 15);
-
-        console.log(itemCollection.find().fetch());
 
 
         let rootNode = itemCollection.findOne({name:"root"});

@@ -1,6 +1,6 @@
 import { Template } from 'meteor/templating';
 import { Meteor } from 'meteor/meteor';
-import { itemCollection } from '../dbSetup';
+import { itemCollection } from '../../../shared/imports/dbSetup';
 import { Accounts } from 'meteor/accounts-base';
 
 import './profile.html';
@@ -41,8 +41,11 @@ Template.profile.events({
                 } else {
                     Materialize.toast('Password changed successfully', 4000);
                     $('#currentPass').val('');
+                    $('#currentPass').trigger('autoresize');
                     $('#newPass1').val('');
+                    $('#newPass1').trigger('autoresize');
                     $('#newPass2').val('');
+                    $('#newPass2').trigger('autoresize');
                 }
             });
         }
@@ -58,8 +61,10 @@ Template.profile.events({
                 Materialize.toast(e.message, 4000);
             } else {
                 Materialize.toast('Username changed successfully');
+                $('#newUser').val('');
+                $('#newUser').trigger('autoresize');
             }
-        })
+        });
     },
     /**
      * Clicks save email
@@ -71,7 +76,9 @@ Template.profile.events({
             if (e){
                 Materialize.toast(e.message, 4000);
             } else {
-                Materialize.toast('Email changed successfully')
+                Materialize.toast('Email changed successfully');
+                $('#newEmail').val('');
+                $('#newEmail').trigger('autoresize');
             }
         });
     },

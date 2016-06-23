@@ -57,7 +57,12 @@ Template.sidenav.events({
     'click #navAbout':function(event){
         event.preventDefault();
         aboutModal.displayModal();
+    },
+    'click #navAnalytics':function(event){
+        event.preventDefault();
+        Router.go('/analytics');
     }
+
     /**
     'click [name="desktop"]':function(event){
         event.preventDefault();

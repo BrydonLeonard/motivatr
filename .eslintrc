@@ -19,7 +19,11 @@
     "max-len": ["warn", 120],
     "eol-last": "off",
     "no-param-reassign": "off",
-    "no-underscore-dangle": "off"
+    "no-underscore-dangle": "off",
+    "consistent-return": "off",
+    "prefer-template": "off",
+    "spaced-comment":["error", "never"],
+    "no-else-return": "off"
   },
   "globals": {
     "describe":true,

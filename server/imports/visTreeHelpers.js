@@ -1,6 +1,6 @@
 import { Mongo } from 'meteor/mongo';
 import { progress } from './treeHelpers';
-import { itemCollection } from './dbSetup';
+import { itemCollection } from './../../shared/imports/dbSetup';
 
 /**
  * Helper function to get the class of an item in the jqtree display, based on item progress

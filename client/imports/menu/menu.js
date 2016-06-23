@@ -1,6 +1,6 @@
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
-import { itemCollection } from '../dbSetup';
+import { itemCollection } from '../../../shared/imports/dbSetup';
 import { Session } from 'meteor/session';
 import { Meteor } from 'meteor/meteor';
 
@@ -34,11 +34,13 @@ Template.todoContainer.onCreated(function(){
     Session.set('activeItem', null);
     Session.set('selectedItem', null);
     Meteor.subscribe('itemCollection');
+
     newItemModal.addToTemplate($('body')[0]);
     confirmModal.addToTemplate($('body')[0]);
     relocateModal.addToTemplate($('body')[0]);
     infoModal.addToTemplate($('body')[0]);
     editModal.addToTemplate($('body')[0]);
+
     initAnimations();
     bounce = new Bounce();
     bounce.scale({

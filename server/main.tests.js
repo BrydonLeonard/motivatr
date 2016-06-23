@@ -1,13 +1,15 @@
 import { Meteor } from 'meteor/meteor';
 import { expect } from 'meteor/practicalmeteor:chai';
-import { itemCollection } from './imports/dbSetup';
+import { itemCollection, analytics } from './../shared/imports/dbSetup';
 import './main';
 
 let resetDB = function(user, noReset){
     //This lets us use this method for testing the adoption methods
     if (!noReset) {
         itemCollection.remove({});
+        analytics.remove({});
     }
+
 
     // Insert framework objects, with only fields necessary for testing
     let root = itemCollection.insert({
@@ -608,6 +610,81 @@ describe('Meteor Methods', () => {
         });
     });
 
+    describe('Analytics', () => {
+        let root;
+        let l1;
+        let l2done;
+        let l2not;
+        let userId;
+
+        beforeEach(() => {
+            userId = '10';
+            let vals = resetDB(userId);
+            root = vals.root;
+            l1 = vals.l1;
+            l2done = vals.l2done;
+            l2not = vals.l2not;
+        });
+
+        it('registers a single added node', () => {
+            let addNode = Meteor.server.method_handlers['addChild'];
+            let invocation = { userId: 10 };
+
+            let _id = addNode.apply(invocation, [{
+                name:'newNode'
+            }]);
+
+            let analyticsEntry = analytics.findOne({ user: 10 });
+
+            expect(analyticsEntry).to.exist;
+            expect(analyticsEntry.type).to.equal('add');
+            expect(analyticsEntry.num).to.equal(1);
+            expect(analyticsEntry.time).to.exist;
+        });
+
+        it('registers an added tree', () => {
+            let addTree = Meteor.server.method_handlers['importTree'];
+            let invocation = { userId: 10 };
+
+            addTree.apply(invocation, ['{"n":"root","c":[{"n":"l1","c":[{"n":"l21","c":[]},{"n":"l22","c":[]}]}]}']);
+
+            let analyticsEntry = analytics.findOne({ user: 10 });
+
+            expect(analyticsEntry).to.exist;
+            expect(analyticsEntry.type).to.equal('add');
+            expect(analyticsEntry.num).to.equal(4);
+            expect(analyticsEntry.time).to.exist;
+        });
+
+        it('registers a removed node', () => {
+            let removeNode = Meteor.server.method_handlers['removeNode'];
+            let invocation = { userId: 10 };
+
+            removeNode.apply(invocation, [l2not]);
+
+            let analyticsEntry = analytics.findOne({ user: 10 });
+
+            expect(analyticsEntry).to.exist;
+            expect(analyticsEntry.type).to.equal('remove');
+            expect(analyticsEntry.num).to.equal(1);
+            expect(analyticsEntry.time).to.exist;
+        });
+
+        it('registers a removed subtree', () => {
+            let removeNode = Meteor.server.method_handlers['removeNode'];
+            let invocation = { userId: 10 };
+
+            removeNode.apply(invocation, [root]);
+
+            let analyticsEntry = analytics.find({ user: 10 });
+
+            expect(analyticsEntry).to.exist;
+            expect(analyticsEntry.type).to.equal('remove');
+            expect(analyticsEntry.num).to.equal(4);
+            expect(analyticsEntry.time).to.exist;
+        });
+    });
+
     describe('Repeatable nodes', () => {
         let root;
         let l1;
@@ -967,6 +1044,17 @@ describe('Meteor Methods', () => {
             expect(data[6]).to.have.deep.property('data.id', 'edgeId2');
             expect(data[6]).to.have.deep.property('data.target', l2not);
             expect(data[6]).to.have.deep.property('data.source', l1);
+        });
+
+        it('can generate level data for the analytics screen', () => {
+            let analData = Meteor.server.method_handlers['analyticsLevelData'];
+            let invocation = { userId };
+
+            let data = analData.apply(invocation);
+
+            expect(data[0]).to.equal(1);
+            expect(data[1]).to.equal(1);
+            expect(data[2]).to.equal(2);
         });
 
     });

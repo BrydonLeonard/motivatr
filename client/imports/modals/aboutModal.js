@@ -12,7 +12,7 @@ Template.aboutModal.helpers({
     'version':function(){
         return Meteor.settings.public.version;
     }
-})
+});
 
 /**
  * Open an about modal
