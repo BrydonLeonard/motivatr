@@ -13,7 +13,7 @@ let getDesktopChildren = function(_id){
     itemCollection.find({parent:_id}).forEach(function(item) {
         let temp = {
             id: item._id,
-            label: (item.name + completeLabel(item._id)),
+            contents: (item.name + completeLabel(item._id)),
             children: []
         };
         temp.children = getDesktopChildren(item._id);
