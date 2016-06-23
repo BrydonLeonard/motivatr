@@ -90,7 +90,7 @@ Meteor.methods({
             itemCollection.find({level:0, user:userId}).forEach(function(item){
                 let temp = {
                     id: item._id,
-                    label: (item.name + completeLabel(item._id)),
+                    contents: (item.name + completeLabel(item._id)),
                     children: []
                 }
 
