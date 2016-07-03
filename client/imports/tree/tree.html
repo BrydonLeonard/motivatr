@@ -9,5 +9,12 @@
             <li><a class="btn-floating blue" id="none"><i class="material-icons">play_arrow</i></a></li>
         </ul>
     </div>
+    {{#if selectedNode}}
+    <div class="fixed-action-btn horizontal click-to-toggle" style="bottom: 45px; right: 96px;">
+        <a class="btn-floating btn-large orange lighten-2">
+            <i class="material-icons" id="delete">delete</i>
+        </a>
+    </div>
+    {{/if}}
     <svg id="treesSVG"></svg>
 </template>
