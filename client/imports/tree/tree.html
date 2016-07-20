@@ -10,11 +10,16 @@
         </ul>
     </div>
     {{#if selectedNode}}
-    <div class="fixed-action-btn horizontal click-to-toggle" style="bottom: 45px; right: 96px;">
-        <a class="btn-floating btn-large orange lighten-2">
-            <i class="material-icons" id="delete">delete</i>
-        </a>
-    </div>
+        <div class="fixed-action-btn horizontal click-to-toggle" style="bottom: 45px; right: 96px;">
+            <a class="btn-floating btn-large orange lighten-2" id="delete">
+                <i class="material-icons">delete</i>
+            </a>
+        </div>
+        <div class="fixed-action-btn horizontal click-to-toggle" style="bottom: 45px; right: 168px;">
+            <a class="btn-floating btn-large orange lighten-2" id="done">
+               <i class="material-icons">{{#if isDone}}close{{else}}check{{/if}}</i>
+            </a>
+        </div>
     {{/if}}
     <svg id="treesSVG"></svg>
 </template>

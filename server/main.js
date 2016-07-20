@@ -17,7 +17,6 @@ Meteor.startup(() => {
     initDB();
 });
 
-
 Meteor.methods({
     /**
      * Returns the user's todo data, formatted to be displayed by jqtree
@@ -92,8 +91,9 @@ Meteor.methods({
             itemCollection.find({ level: 0, user: userId }).forEach(function(item){
                 let temp = {
                     id: item._id,
-                    contents: (item.name + completeLabel(item._id)),
-                    children: []
+                    contents: item.name,
+                    children: [],
+                    done: item.done
                 };
 
                 temp.children = getDesktopChildren(item._id);
