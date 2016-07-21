@@ -49,10 +49,10 @@ Template.treeContainer.onRendered(function(){
                 for (let i = 0; i < elements.length; i++) {
                     svg.drawTree(elements[i], {
                         lineStroke: '6fd8ce',
-                        fill: '#4db6ac',
-                        stroke: '#4db6ac',
-                        rootFill: '#4db6ac',
-                        rootStroke: '#4db6ac',
+                        fill: '#e57373',
+                        stroke: '#e57373',
+                        rootFill: '#e57373',
+                        rootStroke: '#e57373',
                         selectedFill: '#7ced94',
                         selectedStroke: '#7ced94'
                     });
@@ -60,13 +60,9 @@ Template.treeContainer.onRendered(function(){
                     svg.trees[svg.trees.length - 1].traverse(function(node) {
                         if(node.done) {
                             svg.setColor(node, {
-                                fill: '#FFFF55',
-                                stroke: '#FFFF55'
+                                fill: '#4db6ac',
+                                stroke: '#4db6ac'
                             });
-                            node._text.innerHTML = node.contents + ' [DONE]';
-                            var bbox = node._text.getBBox();
-                            node._rect.setAttribute('width', bbox.width + 10);
-                            node._rect.setAttribute('height', bbox.height + 10);
                         }
                     });
                 }
@@ -112,27 +108,20 @@ Template.treeContainer.events({
             }
         });
     },
-    'click #done':function(e, instance){
+    'click #done':function(e, instance) {
         e.preventDefault();
         var node = instance.selectedNode.get();
         Meteor.call('toggleComplete', node.id);
         // Very hacky, need to add methods to trees.js for this.
         if(node.done) {
+            svg.current.fill = '#e57373';
+            svg.current.stroke = '#e57373';
+        } else {
             svg.current.fill = '#4db6ac';
             svg.current.stroke = '#4db6ac';
-            node._text.innerHTML = node.contents;
-            var bbox = node._text.getBBox();
-            node._rect.setAttribute('width', bbox.width + 10);
-            node._rect.setAttribute('height', bbox.height + 10);
-        } else {
-            svg.current.fill = '#FFFF55';
-            svg.current.stroke = '#FFFF55';
-            node._text.innerHTML = node.contents + ' [DONE]';
-            var bbox = node._text.getBBox();
-            node._rect.setAttribute('width', bbox.width + 10);
-            node._rect.setAttribute('height', bbox.height + 10);
         }
         node.done = !node.done;
+        instance.selectedNode.set(node);
     }
 });
 
