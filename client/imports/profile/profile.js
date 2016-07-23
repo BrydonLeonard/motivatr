@@ -24,6 +24,11 @@ Template.profile.helpers({
             return Meteor.user().emails[0].address;
         } else return 'No email yet';
 
+    },
+    'tutDone':function() {
+        if (Meteor.user()) {
+            return Meteor.user().profile.tutDone;
+        }
     }
 });
 

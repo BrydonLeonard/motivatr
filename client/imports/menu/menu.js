@@ -34,7 +34,7 @@ Template.todoContainer.onCreated(function(){
     Session.set('activeItem', null);
     Session.set('selectedItem', null);
     Meteor.subscribe('itemCollection', function() {
-        if (!Meteor.user().profile.doneTut) {
+        if (!Meteor.user().profile.tutDone) {
             Session.set('tutorial', 1);
             infoModal.displayModal('Welcome to motivatr! This app will help you to take huge, daunting projects and break them down until they\'re really easy. When you\'re ready, close this window and click the "+" button to begin',
                 'Welcome');
@@ -68,7 +68,7 @@ Template.todoContainer.onCreated(function(){
     window.onpopstate = function(event){
         goBack();
     };
-    Tracker.autorun(function() {
+    this.autorun(function() {
        let state = Session.get('tutorial');
         if (state === 2) {
             Materialize.toast('Give your project a name', 5000);
@@ -89,11 +89,11 @@ Template.todoContainer.onCreated(function(){
                 'More subtasks');
         }
         if (state === 7) {
+            Meteor.call('tutorialComplete');
             infoModal.displayModal('You now know the basics of using motivatr. All you need to do is select an item and click the tick to mark it as complete. \n\nAnother cool feature is the tree view, which you can find in the side menu. If you have any suggestions or questions, you can find our contact details in the "about" page.',
                 'Where to go now',
                 function() {
                     Session.set('tutorial', 8);
-                    Meteor.call('tutorialComplete');
                 });
         }
     });

@@ -603,6 +603,9 @@ Meteor.methods({
             });
         }
     },
+    /**
+     * Marks the user's tutorial as incomplete so that they can do it again
+     */
     restartTutorial() {
         let userId = this.userId;
         if (userId) {
