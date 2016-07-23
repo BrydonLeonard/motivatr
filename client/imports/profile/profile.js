@@ -24,6 +24,25 @@ Template.profile.helpers({
             return Meteor.user().emails[0].address;
         } else return 'No email yet';
 
+    },
+    /**
+     * Returns true if the user has completed the tutorial
+     * @returns {MeteorTemplateHelpersNamespace.profile.tutDone|MeteorTemplateHelpersNamespace.profile.'tutDone'}
+     */
+    'tutDone':function() {
+        if (Meteor.user()) {
+            return Meteor.user().profile.tutDone;
+        }
+    },
+    /**
+     * Returns true if the user is logged in with facebook
+     */
+    'social':function() {
+        let user = Meteor.user();
+        if (!user){
+            return;
+        }
+        return !(user.username);
     }
 });
 
@@ -93,6 +112,15 @@ Template.profile.events({
             $('#newPass2').removeClass('nomatch');
             $('#newPass1').removeClass('nomatch');
         }
+    },
+    /**
+     * Restart's the user's tutorial and sends them to the menu screen
+     */
+    'click #restartTutorial'() {
+        Meteor.call('restartTutorial', function() {
+            Session.set('tutorial', 1);
+            Router.go('menu');
+        });
     }
 });
 

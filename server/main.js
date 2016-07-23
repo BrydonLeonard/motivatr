@@ -17,7 +17,6 @@ Meteor.startup(() => {
     initDB();
 });
 
-
 Meteor.methods({
     /**
      * Returns the user's todo data, formatted to be displayed by jqtree
@@ -92,8 +91,9 @@ Meteor.methods({
             itemCollection.find({ level: 0, user: userId }).forEach(function(item){
                 let temp = {
                     id: item._id,
-                    contents: (item.name + completeLabel(item._id)),
-                    children: []
+                    contents: item.name,
+                    children: [],
+                    done: item.done
                 };
 
                 temp.children = getDesktopChildren(item._id);
@@ -589,7 +589,45 @@ Meteor.methods({
             });
             return levels;
         }
+    },
+    /**
+     * Marks the user as having completed the tutorial
+     */
+    tutorialComplete(){
+        let userId = this.userId;
+        if (userId){
+            Meteor.users.update({ _id: userId }, {
+                $set: {
+                    'profile.tutDone': true
+                }
+            });
+        }
+    },
+    /**
+     * Marks the user's tutorial as incomplete so that they can do it again
+     */
+    restartTutorial() {
+        let userId = this.userId;
+        if (userId) {
+            Meteor.users.update({ _id: userId }, {
+                $set: {
+                    'profile.tutDone': false
+                }
+            });
+        }
     }
+});
+
+Accounts.onCreateUser(function(options, user) {
+    if (user.services && user.services.facebook) {
+        user.profile = {
+            name: user.services.facebook.first_name,
+            surname: user.services.facebook.last_name,
+            picture: 'http://graph.facebook.com/' + user.services.facebook.id + '/picture/?type=large',
+            rating: 0
+        };
+    }
+    return user;
 });
 
 Meteor.publish('itemCollection', function(){

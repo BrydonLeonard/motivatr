@@ -1,8 +1,8 @@
 <template name="newItemModal">
-    <div id="newItemModal" class="modal">
-        <div class="modal-content">
-            <h4>Add a new item</h4>
-            <form id="newItemForm">
+    <div id="newItemModal" class="modal wide-modal">
+        <form id="newItemForm">
+            <div class="modal-content">
+                <h5>Add a new item</h5>
                 <div class="input-field" id="newItemInput">
                     {{#if importTree}}
                         <input id="treeString" type="text" class="validate" required>
@@ -47,8 +47,11 @@
                         <input name="duplicates" type="range" id="duplicates" min="1" max="10" default="0">
                     </p>
                 {{/if}}-->
-                <button type="submit" class="waves-effect waves-light btn spread-button">add item</button>
-            </form>
-        </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="newItemCancel" class="waves-effect waves-light btn-flat"><i class="material-icons">clear</i> cancel</a>
+                <button href="#" type="submit" class="waves-effect waves-light btn-flat"><i class="material-icons">done</i> add</button>
+            </div>
+        </form>
     </div>
 </template>

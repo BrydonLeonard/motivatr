@@ -35,6 +35,11 @@ header, main, footer, body {
     header, main, footer, body {
         padding-left: 0;
     }
+    .wide-modal{
+        margin: 9px;
+        width:calc(100% - 18px);
+        margin-top: -30px;
+    }
 }
 
 /* The home screen heading */
@@ -204,3 +209,18 @@ label[data-error]:after {
     height:100%;
 }
 
+
+.bg-circular {
+    display: inline-block;
+    border-radius: 2px;
+    height: 150%;
+    width: 60%;
+    margin-top: 7px;
+    background-position-x: center;
+    background-position-y: center;
+    background-size: 100% auto;
+}
+
+.logo{
+    margin-bottom: 35px;
+}
