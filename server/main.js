@@ -589,6 +589,32 @@ Meteor.methods({
             });
             return levels;
         }
+    },
+    /**
+     * Marks the user as having completed the tutorial
+     */
+    tutorialComplete(){
+        let userId = this.userId;
+        if (userId){
+            Meteor.users.update({ _id: userId }, {
+                $set: {
+                    'profile.tutDone': true
+                }
+            });
+        }
+    },
+    /**
+     * Marks the user's tutorial as incomplete so that they can do it again
+     */
+    restartTutorial() {
+        let userId = this.userId;
+        if (userId) {
+            Meteor.users.update({ _id: userId }, {
+                $set: {
+                    'profile.tutDone': false
+                }
+            });
+        }
     }
 });
 

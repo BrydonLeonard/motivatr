@@ -2,7 +2,7 @@
   "name": "motivatr",
   "private": true,
   "scripts": {
-    "start": "meteor run"
+    "start": "meteor --settings settings.json"
   },
   "dependencies": {
     "bounce.js": "^0.8.2",

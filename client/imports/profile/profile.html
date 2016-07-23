@@ -6,6 +6,12 @@
                     <div class="card-content white-text">
                         <span class="card-title">{{username}}</span>
                         <p>{{email}}</p>
+                        <br>
+                        {{#if tutDone}}
+                            <div>
+                                <button id="restartTutorial" class="waves-effect waves-light btn spread-button">Restart tutorial</button>
+                            </div>
+                        {{/if}}
                     </div>
                 </div>
                 <div class="card teal lighten-2">

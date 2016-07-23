@@ -59,18 +59,20 @@ Template.newItemModal.events({
                     console.log(e);
                     if (e){
                         Materialize.toast("Tree couldn't be built", 4000);
+                    } else {
+                        Materialize.toast('Tree added', 4000);
                     }
-                    $('#newItemModal').closeModal();
                 });
             } else {
                 newObj.name = event.target.itemName.value;
                 Meteor.call('addChild', newObj, function (e) {
                     if (data.callback) {
                         data.callback(e);
-                        $('#newItemModal').closeModal();
+                        Materialize.toast('Item added', 4000);
                     }
                 });
             }
+            $('#newItemModal').closeModal();
         }
     },
     /**
@@ -93,6 +95,9 @@ Template.newItemModal.events({
     },
     'change #importTree':function(){
         checkBoxDep.changed();
+    },
+    'click #newItemCancel': function() {
+        $('#newItemModal').closeModal();
     }
 });
 

@@ -45,11 +45,15 @@
         <!--/FABS-->
 
         <!--BODY-->
-        <ul class="collection">
-            {{#each item}}
-                {{>itemTemp}}
-            {{/each}}
-        </ul>
+        {{#if areItems}}
+            <ul class="collection">
+                {{#each item}}
+                    {{>itemTemp}}
+                {{/each}}
+            </ul>
+        {{else}}
+            <h5 class="teal-text text-lighten-3"><small>Click the "+" to add your first big project.</small></h5>
+        {{/if}}
         <!--/BODY-->
 
         <br>
