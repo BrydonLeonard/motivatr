@@ -25,10 +25,24 @@ Template.profile.helpers({
         } else return 'No email yet';
 
     },
+    /**
+     * Returns true if the user has completed the tutorial
+     * @returns {MeteorTemplateHelpersNamespace.profile.tutDone|MeteorTemplateHelpersNamespace.profile.'tutDone'}
+     */
     'tutDone':function() {
         if (Meteor.user()) {
             return Meteor.user().profile.tutDone;
         }
+    },
+    /**
+     * Returns true if the user is logged in with facebook
+     */
+    'social':function() {
+        let user = Meteor.user();
+        if (!user){
+            return;
+        }
+        return !(user.username);
     }
 });
 

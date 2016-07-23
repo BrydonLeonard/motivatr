@@ -83,11 +83,17 @@ Template.sidenav.helpers({
     'social':function(){
         let user = Meteor.user();
         if (!user){
-            return
+            return;
         }
         return !(!user.services);
+    },
+    'picture':function() {
+        let user = Meteor.user();
+        if (user) {
+            return user.profile.picture;
+        }
     }
-})
+});
 
 Template.blankLayout.onRendered(function(){
     $('body').addClass('no-left-padding');

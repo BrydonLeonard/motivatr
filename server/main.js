@@ -618,6 +618,18 @@ Meteor.methods({
     }
 });
 
+Accounts.onCreateUser(function(options, user) {
+    if (user.services && user.services.facebook) {
+        user.profile = {
+            name: user.services.facebook.first_name,
+            surname: user.services.facebook.last_name,
+            picture: 'http://graph.facebook.com/' + user.services.facebook.id + '/picture/?type=large',
+            rating: 0
+        };
+    }
+    return user;
+});
+
 Meteor.publish('itemCollection', function(){
     return itemCollection.find({ user: this.userId });
 });
