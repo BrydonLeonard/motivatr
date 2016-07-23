@@ -93,6 +93,15 @@ Template.profile.events({
             $('#newPass2').removeClass('nomatch');
             $('#newPass1').removeClass('nomatch');
         }
+    },
+    /**
+     * Restart's the user's tutorial and sends them to the menu screen
+     */
+    'click #restartTutorial'() {
+        Meteor.call('restartTutorial', function() {
+            Session.set('tutorial', 1);
+            Router.go('menu');
+        });
     }
 });
 

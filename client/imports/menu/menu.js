@@ -33,7 +33,13 @@ Template.todoContainer.onCreated(function(){
     breadcrumbs = [{name:'home', key:'root', num:0}];
     Session.set('activeItem', null);
     Session.set('selectedItem', null);
-    Meteor.subscribe('itemCollection');
+    Meteor.subscribe('itemCollection', function() {
+        if (!Meteor.user().profile.doneTut) {
+            Session.set('tutorial', 1);
+            infoModal.displayModal('Welcome to motivatr! This app will help you to take huge, daunting projects and break them down until they\'re really easy. When you\'re ready, close this window and click the "+" button to begin',
+                'Welcome');
+        }
+    });
 
     newItemModal.addToTemplate($('body')[0]);
     confirmModal.addToTemplate($('body')[0]);
@@ -62,6 +68,35 @@ Template.todoContainer.onCreated(function(){
     window.onpopstate = function(event){
         goBack();
     };
+    Tracker.autorun(function() {
+       let state = Session.get('tutorial');
+        if (state === 2) {
+            Materialize.toast('Give your project a name', 5000);
+        }
+        if (state === 3) {
+            Materialize.toast('Tap on your new project', 5000);
+        }
+        if (state === 4) {
+            Materialize.toast('Tap the split button', 5000);
+        }
+        if (state === 5) {
+            infoModal.displayModal(
+                'Now this is the exciting part. You need to think of some small task that you need to complete before you can finish your big task. Type it\'s name and click add',
+                'Splitting');
+        }
+        if (state === 6) {
+            infoModal.displayModal('Now you can click the "+" to add another small task, or click on the new subtask and break it down even more',
+                'More subtasks');
+        }
+        if (state === 7) {
+            infoModal.displayModal('You now know the basics of using motivatr. All you need to do is select an item and click the tick to mark it as complete. \n\nAnother cool feature is the tree view, which you can find in the side menu. If you have any suggestions or questions, you can find our contact details in the "about" page.',
+                'Where to go now',
+                function() {
+                    Session.set('tutorial', 8);
+                    Meteor.call('tutorialComplete');
+                });
+        }
+    });
 });
 
 Template.todoContainer.events({
@@ -70,11 +105,22 @@ Template.todoContainer.events({
      * @param event
      */
     'click .add':function(event){
+        if (Session.get('tutorial') === 1) {
+            Session.set('tutorial', 2);
+        } else {
+            if (Session.get('tutorial') === 6) {
+                Session.set('tutorial', 7);
+            }
+        }
         event.preventDefault();
         let activeId = Session.get('activeItem') ? Session.get('activeItem') : null;
         newItemModal.displayModal(activeId, function(e){
             if (e){
                 Materialize.toast('Something went wrong', 4000);
+            } else {
+                if (Session.get('tutorial', 2)) {
+                    Session.set('tutorial', 3);
+                }
             }
         });
     },
@@ -143,10 +189,22 @@ Template.todoContainer.events({
     },
     'click #splitChild':function(event){
         event.preventDefault();
+
+        if (Session.get('tutorial') === 4){
+            Session.set('tutorial', 5);
+        } else {
+            if (Session.get('tutorial') === 6) {
+                Session.set('tutorial', 7);
+            }
+        }
+
         newItemModal.displayModal(Session.get('selectedItem'), function(e){
             if (e){
                 Materialize.toast("Something went wrong", 4000);
             } else {
+                if (Session.get('tutorial') === 5){
+                    Session.set('tutorial', 6);
+                }
                 let moveTo = itemCollection.findOne(Session.get('selectedItem'));
                 goToChild(moveTo._id, moveTo.name);
                 closeFab();
@@ -172,7 +230,7 @@ Template.todoContainer.events({
         if (Session.get('selectedItem')){
             //TODO get some caching going on here in case they repeatedly ask for the same tree
             Meteor.call('exportTree', Session.get('selectedItem'), function(e,treeString) {
-                infoModal.displayModal(treeString, 'Your tree string:');
+                infoModal.displayModal(treeString, 'You can copy this and send it to your friends so that they can add the same tree as you:');
             });
         }
     },
@@ -220,6 +278,9 @@ Template.todoContainer.helpers({
                 $in:children
             }
         });
+    },
+    areItems: function() {
+        return itemCollection.find().count() > 0;
     },
     /**
      * Returns the percentage completion for a given node. Formatted as a percentage
@@ -382,6 +443,10 @@ Template.itemTemp.events({
      */
     'click .itemLink':function(event){
         event.preventDefault();
+
+        if (Session.get('tutorial') === 3){
+            Session.set('tutorial', 4);
+        }
         //If nothing is selected
         if (Session.get('selectedItem') == null) {
             changeSelected(this._id);
