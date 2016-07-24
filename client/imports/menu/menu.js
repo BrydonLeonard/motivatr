@@ -30,14 +30,25 @@ let bounceSpin;
 
 
 Template.todoContainer.onCreated(function(){
-    breadcrumbs = [{name:'home', key:'root', num:0}];
+    breadcrumbs = [{ name: 'home', key: 'root', num: 0 }];
     Session.set('activeItem', null);
     Session.set('selectedItem', null);
-    Meteor.subscribe('itemCollection', function() {
+    let tutFunc = function() {
         if (!Meteor.user().profile.tutDone) {
             Session.set('tutorial', 1);
             infoModal.displayModal('Welcome to motivatr! This app will help you to take huge, daunting projects and break them down until they\'re really easy. When you\'re ready, close this window and click the "+" button to begin',
                 'Welcome');
+        }
+    };
+
+
+    Meteor.subscribe('itemCollection', function() {
+        //If we find a user with no profile, do a profileCheckup to populate their profile.
+        //This should only happen on old accounts, created before the profile picture and tutorial fields
+        if (!Meteor.user().profile || !Meteor.user().profile.tutDone || !Meteor.user().profile.picture || !Meteor.user().profile.name) {
+            Meteor.call('profileCheckup', tutFunc);
+        } else {
+            tutFunc();
         }
     });
 
