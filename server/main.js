@@ -11,6 +11,7 @@ import { initServices } from './imports/services';
 import moment from 'moment';
 import * as serializer from './imports/serializer';
 import * as analytics from './imports/analytics';
+import { HTTP } from 'meteor/http';
 
 Meteor.startup(() => {
     initServices();
@@ -620,6 +621,42 @@ Meteor.methods({
                 }
             });
         }
+    },
+    /**
+     * Checks that a profile has all the fields it should. It will fix up any problems it finds
+     */
+    profileCheckup() {
+        let user = Meteor.users.findOne({ _id: this.userId });
+        let update = {
+            profile: user.profile
+        }
+        if (!user.profile) {
+            update.profile = {
+                tutDone: false
+            };
+        } else {
+            if (!('tutDone' in user.profile)) {
+                update.profile = {
+                    tutDone: false
+                }
+            }
+        }
+        if (user.services && user.services.facebook) {
+            if (!user.profile || !user.profile.picture) {
+                update.profile.picture = 'http://graph.facebook.com/' + user.services.facebook.id + '/picture/?type=large';
+            }
+            if (!user.profile || !user.profile.name) {
+                update.profile.name = user.services.facebook.first_name;
+                update.profile.surname = user.services.facebook.last_name;
+            }
+        } else {
+            if (!user.profile || !user.profile.picture) {
+                update.profile.picture = '/logo.png';
+            }
+        }
+        Meteor.users.update({ _id: user._id }, {
+            $set: update
+        });
     }
 });
 
@@ -629,9 +666,15 @@ Accounts.onCreateUser(function(options, user) {
             name: user.services.facebook.first_name,
             surname: user.services.facebook.last_name,
             picture: 'http://graph.facebook.com/' + user.services.facebook.id + '/picture/?type=large',
-            rating: 0
+            tutDone: false
         };
+    } else {
+        user.profile = {
+            picture: 'http://placehold.it/300x300',
+            tutDone: false,
+        }
     }
+
     return user;
 });
 

@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "start": "meteor --settings settings.json",
-    "test": "meteor test --driver-package practicalmeteor:mocha --settings settings.json --port 3005" 
+    "test": "meteor test --driver-package practicalmeteor:mocha --port 3005 --settings settings.json"
   },
   "dependencies": {
     "bounce.js": "^0.8.2",
