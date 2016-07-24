@@ -969,34 +969,35 @@ describe('Meteor Methods', () => {
             l2not = vals.l2not;
         });
 
-/* This has to do with the desktop tree visualisation. Removed for now
-        it('can generate the structure to be displayed by jqtree', () => {
+        describe('#desktopTreeData', () => {
             let desktopTreeData = Meteor.server.method_handlers['desktopTreeData'];
-            let invocation = { userId };
 
-            let data = desktopTreeData.apply(invocation)[0];
+            it('returns all root elements in an array as tree data structures', () => {
+                let invocation = { userId };
+                let roots = desktopTreeData.apply(invocation, [root]);
+                let checkChildren = function(node) {
+                    expect(node.contents).to.exist;
+                    expect(node.children).to.exist;
+                    if(node.children && node.children.length > 0) {
+                        node.children.forEach(function (child) {
+                            checkChildren(child);
+                        });
+                    }
+                };
 
-            let expected = {
-                id: root,
-                label: 'root',
-                children: [{
-                    id:l1,
-                    label:'l1',
-                    children: [{
-                        id:l2done,
-                        label:'l2done',
-                        children:[]
-                    },{
-                        id:l2not,
-                        label:'l2not',
-                        children:[]
-                    }]
-                }]
-            }
+                roots.forEach(function(root) {
+                    checkChildren(root);
+                });
+            });
 
-            expect(data).to.eql(expected);
-
-        });*/
+            it('supports trees.js format', () => {
+                let invocation = { userId };
+                let root = desktopTreeData.apply(invocation, [root]);
+                // Check the first child encountered
+                expect(root[0].children).to.exist;
+                expect(root[0].contents).to.exist;
+            });
+        });
 
         it('can generate the structure to be displayed by cytoscape', () => {
             // We need to be able to give a funciton that takes a callback to Meteor.wrapAsync
