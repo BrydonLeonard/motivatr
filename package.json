@@ -2,7 +2,8 @@
   "name": "motivatr",
   "private": true,
   "scripts": {
-    "start": "meteor --settings settings.json"
+    "start": "meteor --settings settings.json",
+    "test": "meteor test --driver-package practicalmeteor:mocha --settings settings.json --port 3005" 
   },
   "dependencies": {
     "bounce.js": "^0.8.2",

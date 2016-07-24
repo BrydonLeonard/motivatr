@@ -2,6 +2,7 @@ import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
 import { Mongo } from 'meteor/mongo';
 import { $ } from 'meteor/jquery';
+import { itemCollection } from '../../../shared/imports/dbSetup';
 
 import trees from 'trees.js';
 
@@ -11,11 +12,52 @@ import * as confirmModal from '../modals/confirmModal';
 let svg;
 
 /**
+ * Toggles a node's 'done' state if toggle is true, otherwise simply fetch from the db if it is done.
+ * (This should occur due to bubble complete).
+ * @param node
+ */
+let toggleNodeColor = function(node, toggle) {
+    // Very hacky, need to add methods to trees.js for this.
+    if(node) {
+        if (toggle) {
+            node.done = !node.done;
+            if (node.done) {
+                svg.current.fill = '#4db6ac';
+                svg.current.stroke = '#4db6ac';
+            } else {
+                svg.current.fill = '#e57373';
+                svg.current.stroke = '#e57373';
+            }
+        } else {
+            if (node.done) {
+                svg.setColor(node, {
+                    fill: '#4db6ac',
+                    stroke: '#4db6ac'
+                });
+            } else {
+                svg.setColor(node, {
+                    fill: '#e57373',
+                    stroke: '#e57373'
+                });
+            }
+        }
+        if (node.parent) {
+            let parent = itemCollection.findOne(node.parent.id);
+            if (parent) {
+                node.parent.done = parent.completeDescendants === parent.descendants;
+                toggleNodeColor(node.parent);
+            }
+        }
+    }
+}
+
+/**
  * When the treeContainer template is created, initialise the selected node reactive variable.
  */
 Template.treeContainer.onCreated(function() {
     this.selectedNode = new ReactiveVar(null);
     confirmModal.addToTemplate($('body')[0]);
+    Meteor.subscribe('itemCollection');
 });
 
 /**
@@ -102,7 +144,11 @@ Template.treeContainer.events({
             if(res) {
                 var removedNode = svg.removeNode(instance.selectedNode.get(), false);
                 if(removedNode) {
-                    Meteor.call('removeNode', removedNode.id);
+                    Meteor.call('removeNode', removedNode.id, function(err) {
+                        if(!err) {
+                            toggleNodeColor(removedNode);
+                        }
+                    });
                     instance.selectedNode.set(null);
                 }
             }
@@ -111,23 +157,22 @@ Template.treeContainer.events({
     'click #done':function(e, instance) {
         e.preventDefault();
         var node = instance.selectedNode.get();
-        Meteor.call('toggleComplete', node.id);
-        // Very hacky, need to add methods to trees.js for this.
-        if(node.done) {
-            svg.current.fill = '#e57373';
-            svg.current.stroke = '#e57373';
-        } else {
-            svg.current.fill = '#4db6ac';
-            svg.current.stroke = '#4db6ac';
-        }
-        node.done = !node.done;
-        instance.selectedNode.set(node);
+        Meteor.call('toggleComplete', node.id, function(err) {
+            if(!err) {
+                toggleNodeColor(instance.selectedNode.get(), true);
+                instance.selectedNode.set(node);
+            }
+        });
     }
 });
 
 Template.treeContainer.helpers({
     selectedNode() {
         return Template.instance().selectedNode.get();
+    },
+    isLeafNode() {
+        let children = Template.instance().selectedNode.get().children;
+        return children && children.length === 0;
     },
     isDone() {
         return Template.instance().selectedNode.get().done;
