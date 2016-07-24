@@ -3,7 +3,7 @@ import {  Accounts } from 'meteor/accounts-base';
 import { check } from 'meteor/check';
 import { itemCollection, analytics as analyticsCollection, initDB } from './../shared/imports/dbSetup';
 import { completeClass, getVisChildren } from './imports/visTreeHelpers';
-import { completeLabel, getDesktopChildren } from './imports/desktopTreeHelpers';
+import { getDesktopChildren } from './imports/desktopTreeHelpers';
 import * as Errors from './imports/errors';
 import * as Check from './imports/check';
 import { bubbleComplete, bubbleRemove, sinkRemove,  bubbleAdd, bubbleUpdate, addLeaf, removeLeaf, bubbleLevel } from './imports/treeHelpers';
@@ -93,12 +93,17 @@ Meteor.methods({
                 let temp = {
                     id: item._id,
                     contents: item.name,
-                    children: [],
-                    done: item.done
+                    children: []
                 };
 
                 temp.children = getDesktopChildren(item._id);
                 data.push(temp);
+
+                if(item.done) {
+                    temp.done = true;
+                } else {
+                    temp.done = item.descendants > 0 && item.completeDescendants === item.descendants;
+                }
             });
 
             return data;
