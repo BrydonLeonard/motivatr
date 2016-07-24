@@ -3,6 +3,19 @@ import 'meteor/materialize:materialize';
 import './controls.html';
 import * as aboutModal from '../imports/modals/aboutModal';
 
+//This solves the problem with weird looking modals when the keyboard is opened on mobile
+$(document).ready(function() {
+    let originalSize = $(window).width() + $(window).height();
+    $(window).resize(function() {
+        if ($(window).width() + $(window).height() != originalSize) {
+            console.log('running');
+            $('.wide-modal').addClass('wide-modal-keyboard-open');
+        } else {
+            $('.wide-modal-keyboard-open').removeClass('wide-modal-keyboard-open');
+        }
+    });
+})
+
 Template.sidenav.onCreated(function(){
     aboutModal.addToTemplate($('body')[0]);
 });
@@ -48,7 +61,9 @@ Template.sidenav.events({
     'click #navLogout':function(event){
         event.preventDefault();
         $('.side-nav').sideNav('hide');
-        Meteor.logout();
+        Meteor.logout(function() {
+            Router.go('login');
+        });
     },
     'click #navProfile':function(event){
         event.preventDefault();
@@ -74,7 +89,8 @@ Template.sidenav.helpers({
     name: function(){
         if (Meteor.user()) {
             if (Meteor.user().profile && Meteor.user().profile.name){
-                return Meteor.user().profile.name;
+                let temp = Meteor.user().profile.name;
+                return temp.substr(0, 1).toUpperCase() + temp.substr(1);
             }
             return Meteor.user().username;
         }
